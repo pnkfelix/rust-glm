@@ -1,4 +1,5 @@
-use super::typedefs::vec2;
+use super::typedefs::{vec1,vec2};
+use super::typedefs::{ivec1};
 
 /// Scalar value of type T.  (New type wrapper to ease operator overloading.)
 pub struct S<T>(pub T);
@@ -32,9 +33,24 @@ impl<T,Result,RHS:SDivRHS<T,Result>> Div<RHS,Result> for S<T> {
 }
 
 #[deriving(Eq, Show)]
+pub struct TVec1<T> { x: T, }
+#[deriving(Eq, Show)]
 pub struct TVec2<T> { x: T, y: T, }
+#[deriving(Eq, Show)]
 pub struct TVec3<T> { x: T, y: T, z: T, }
+#[deriving(Eq, Show)]
 pub struct TVec4<T> { x: T, y: T, z: T, w: T, }
+
+pub trait Vec1Args { fn make(self) -> vec1; }
+pub fn vec1<Args:Vec1Args>(args: Args) -> vec1 { args.make() }
+
+impl Vec1Args for f32 { fn make(self) -> vec1 { TVec1 { x: self } } }
+
+pub trait IVec1Args { fn make(self) -> ivec1; }
+pub fn ivec1<Args:IVec1Args>(args: Args) -> ivec1 { args.make() }
+
+impl IVec1Args for i32 { fn make(self) -> ivec1 { TVec1 { x: self } } }
+impl IVec1Args for TVec1<i32> { fn make(self) -> ivec1 { TVec1 { x: self.x } } }
 
 pub trait Vec2Args { fn make(self) -> vec2; }
 
@@ -142,6 +158,34 @@ impl TVec2DivRHS<f32> for f32 {
 impl TVec2DivRHS<f32> for TVec2<f32> {
     fn rev_div(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
         TVec2 { x: lhs.x / self.x, y: lhs.y / self.y }
+    }
+}
+
+impl<T:Num + Clone> TVec1<T> {
+    pub fn postdecrement(&mut self) -> TVec1<T> {
+        use std::num::One;
+        let ret = TVec1{ x: self.x.clone() };
+        self.x = self.x - One::one();
+        ret
+    }
+
+    pub fn predecrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
+        use std::num::One;
+        self.x = self.x - One::one();
+        self
+    }
+
+    pub fn postincrement(&mut self) -> TVec1<T> {
+        use std::num::One;
+        let ret = TVec1{ x: self.x.clone() };
+        self.x = self.x + One::one();
+        ret
+    }
+
+    pub fn preincrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
+        use std::num::One;
+        self.x = self.x + One::one();
+        self
     }
 }
 
@@ -277,13 +321,42 @@ impl TVec2DivAssignRHS<f32> for TVec2<f32> {
 }
 
 #[cfg(test)]
+mod vec1_tests {
+    #![allow(uppercase_variables)]
+    use super::vec1;
+    use super::ivec1;
+
+    #[test]
+    fn test_operators() {
+        let A = vec1(1.0f32);
+        let B = vec1(2.0f32);
+        assert!(A != B);
+    }
+
+    #[test]
+    fn test_operator_increment() {
+        let v0 = ivec1(1i32);
+        let mut v1 = ivec1(v0);
+        let mut v2 = ivec1(v0);
+        let v3 = v1.preincrement();
+        let v4 = v2.postincrement();
+        let v1 = v1;
+        let v2 = v2;
+
+        assert_eq!(v0, v4);
+        assert_eq!(v1, v2);
+        assert_eq!(v1, *v3);
+    }
+}
+
+#[cfg(test)]
 mod vec2_tests {
     #![allow(uppercase_variables)]
     use super::vec2;
     use super::S;
 
     #[test]
-    fn test_vec2_operators() {
+    fn test_operators() {
         let A = vec2(1.0f32);
         let B = vec2(1.0f32);
         assert!(A == B);
@@ -411,7 +484,7 @@ mod vec2_tests {
     }
 
     #[test]
-    fn test_vec2_incr_decr_operators() {
+    fn test_incr_decr_operators() {
         let A = vec2(( 1.0f32, 2.0f32 ));
         let mut A = A;
         {

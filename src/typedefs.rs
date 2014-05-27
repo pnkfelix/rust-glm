@@ -1,9 +1,11 @@
 #![allow(non_camel_case_types)]
 
-use super::vector::{TVec2, TVec3, TVec4};
+use super::vector::{TVec1, TVec2, TVec3, TVec4};
 use super::matrix::{TMat2, TMat3, TMat4};
 use super::matrix::{TMat2x3, TMat2x4, TMat3x2, TMat3x4, TMat4x2, TMat4x3};
 
+/// One-component single-precision floating-point vector
+pub type vec1 = TVec1<f32>;
 /// Two-component single-precision floating-point vector
 pub type vec2 = TVec2<f32>;
 /// Three-component single-precision floating-point vector
@@ -11,6 +13,8 @@ pub type vec3 = TVec3<f32>;
 /// Four-component single-precision floating-point vector
 pub type vec4 = TVec4<f32>;
 
+/// One-component double-precision floating-point vector
+pub type dvec1 = TVec1<f64>;
 /// Two-component double-precision floating-point vector
 pub type dvec2 = TVec2<f64>;
 /// Three-component double-precision floating-point vector
@@ -18,6 +22,8 @@ pub type dvec3 = TVec3<f64>;
 /// Four-component double-precision floating-point vector
 pub type dvec4 = TVec4<f64>;
 
+/// One-component boolean vector
+pub type bvec1 = TVec1<bool>;
 /// Two-component boolean vector
 pub type bvec2 = TVec2<bool>;
 /// Three-component boolean vector
@@ -25,6 +31,8 @@ pub type bvec3 = TVec3<bool>;
 /// Four-component boolean vector
 pub type bvec4 = TVec4<bool>;
 
+/// One-component signed integer vector
+pub type ivec1 = TVec1<i32>;
 /// Two-component signed integer vector
 pub type ivec2 = TVec2<i32>;
 /// Three-component signed integer vector
@@ -32,6 +40,8 @@ pub type ivec3 = TVec3<i32>;
 /// Four-component signed integer vector
 pub type ivec4 = TVec4<i32>;
 
+/// One-component unsigned integer vector
+pub type uvec1 = TVec1<u32>;
 /// Two-component unsigned integer vector
 pub type uvec2 = TVec2<u32>;
 /// Three-component unsigned integer vector

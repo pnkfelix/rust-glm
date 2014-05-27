@@ -4,11 +4,11 @@
 #![desc = "GLM port"]
 #![license = "MIT"]
 
-pub use src::typedefs::{vec2,vec3,vec4};
-pub use src::typedefs::{dvec2,dvec3,dvec4};
-pub use src::typedefs::{bvec2,bvec3,bvec4};
-pub use src::typedefs::{ivec2,ivec3,ivec4};
-pub use src::typedefs::{uvec2,uvec3,uvec4};
+pub use src::typedefs::{vec1,vec2,vec3,vec4};
+pub use src::typedefs::{dvec1,dvec2,dvec3,dvec4};
+pub use src::typedefs::{bvec1,bvec2,bvec3,bvec4};
+pub use src::typedefs::{ivec1,ivec2,ivec3,ivec4};
+pub use src::typedefs::{uvec1,uvec2,uvec3,uvec4};
 
 pub use src::typedefs::{mat2,mat3,mat4};
 pub use src::typedefs::{mat2x2,mat2x3,mat2x4};
