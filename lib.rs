@@ -4,6 +4,8 @@
 #![desc = "GLM port"]
 #![license = "MIT"]
 
+#![feature(macro_rules)]
+
 pub use src::typedefs::{vec1,vec2,vec3,vec4};
 pub use src::typedefs::{dvec1,dvec2,dvec3,dvec4};
 pub use src::typedefs::{bvec1,bvec2,bvec3,bvec4};

@@ -68,6 +68,26 @@ impl Decrement for int {
     fn predecrement<'a>(&'a mut self) -> &'a mut int { *self = *self + 1; self }
 }
 
+pub trait AddAssign<RHS> {
+    /// Placeholder for an assumed future `+=` operator.
+    fn add_assign(&mut self, rhs: &RHS);
+}
+
+pub trait SubAssign<RHS> {
+    /// Placeholder for an assumed future `-=` operator.
+    fn sub_assign(&mut self, rhs: &RHS);
+}
+
+pub trait MulAssign<RHS> {
+    /// Placeholder for an assumed future `*=` operator.
+    fn mul_assign(&mut self, rhs: &RHS);
+}
+
+pub trait DivAssign<RHS> {
+    /// Placeholder for an assumed future `/=` operator.
+    fn div_assign(&mut self, rhs: &RHS);
+}
+
 pub trait DotProduct<T> {
     fn dot(&self, &Self) -> T;
 }
@@ -409,6 +429,15 @@ trait Swizzle4<T> : Swizzle3<T> {
     fn wwww(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.w(), w: self.w() } }
 }
 
+#[deriving(Eq, Show)]
+pub struct TVec1<T> { x: T, }
+#[deriving(Eq, Show)]
+pub struct TVec2<T> { x: T, y: T, }
+#[deriving(Eq, Show)]
+pub struct TVec3<T> { x: T, y: T, z: T, }
+#[deriving(Eq, Show)]
+pub struct TVec4<T> { x: T, y: T, z: T, w: T, }
+
 impl<T:Clone> Swizzle2<T> for TVec2<T> {
     fn x(&self) -> T { self.x.clone() }
     fn y(&self) -> T { self.y.clone() }
@@ -430,15 +459,6 @@ impl<T:Clone> Swizzle3<T> for TVec4<T> {
 impl<T:Clone> Swizzle4<T> for TVec4<T> {
     fn w(&self) -> T { self.w.clone() }
 }
-
-#[deriving(Eq, Show)]
-pub struct TVec1<T> { x: T, }
-#[deriving(Eq, Show)]
-pub struct TVec2<T> { x: T, y: T, }
-#[deriving(Eq, Show)]
-pub struct TVec3<T> { x: T, y: T, z: T, }
-#[deriving(Eq, Show)]
-pub struct TVec4<T> { x: T, y: T, z: T, w: T, }
 
 pub trait Vec1Args { fn make(self) -> vec1; }
 pub fn vec1<Args:Vec1Args>(args: Args) -> vec1 { args.make() }
@@ -513,101 +533,170 @@ impl<T:Num> DotProduct<T> for TVec2<T> {
     fn dot(&self, rhs: &TVec2<T>) -> T { self.x * rhs.x + self.y * rhs.y }
 }
 
-pub trait TVec2AddRHS<T> { fn rev_add(&self, lhs: &TVec2<T>) -> TVec2<T>; }
+macro_rules! double_dispatch_T {
+    ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
+        => {
+            pub trait $RHS_trait<T> {
+                fn $rev_method(&self, lhs: & $LHS_type<T>) -> $LHS_type<T>;
+            }
 
-impl<T,RHS:TVec2AddRHS<T>> Add<RHS,TVec2<T>> for TVec2<T> {
-    fn add(&self, rhs: &RHS) -> TVec2<T> { rhs.rev_add(self) }
+            impl<T,RHS:$RHS_trait<T>> $trait_<RHS,$LHS_type<T>> for $LHS_type<T> {
+                fn $method(&self, rhs: &RHS) -> $LHS_type<T> { rhs.$rev_method(self) }
+            }
+        }
+    ;
+    ( $trait_:ident for mut $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
+        => {
+            pub trait $RHS_trait<T> {
+                fn $rev_method(&self, lhs: &mut $LHS_type<T>);
+            }
+
+            impl<T,RHS:$RHS_trait<T>> $trait_<RHS> for $LHS_type<T> {
+                fn $method(&mut self, rhs: &RHS) { rhs.$rev_method(self) }
+            }
+        }
+
 }
 
-impl TVec2AddRHS<f32> for f32 {
-    fn rev_add(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: self + lhs.x, y: self + lhs.y }
+double_dispatch_T!{Add for TVec2 add via TVec2AddRHS rev_add}
+double_dispatch_T!{AddAssign for mut TVec2 add_assign via TVec2AddAssignRHS add_into }
+double_dispatch_T!{Sub for TVec2 sub via TVec2SubRHS rev_sub}
+double_dispatch_T!{SubAssign for mut TVec2 sub_assign via TVec2SubAssignRHS rsb_into }
+double_dispatch_T!{Mul for TVec2 mul via TVec2MulRHS rev_mul}
+double_dispatch_T!{MulAssign for mut TVec2 mul_assign via TVec2MulAssignRHS mul_into }
+double_dispatch_T!{Div for TVec2 div via TVec2DivRHS rev_div}
+double_dispatch_T!{DivAssign for mut TVec2 div_assign via TVec2DivAssignRHS div_into }
+
+double_dispatch_T!{Add for TVec3 add via TVec3AddRHS rev_add}
+double_dispatch_T!{Sub for TVec3 sub via TVec3SubRHS rev_sub}
+double_dispatch_T!{Mul for TVec3 mul via TVec3MulRHS rev_mul}
+double_dispatch_T!{Div for TVec3 div via TVec3DivRHS rev_div}
+double_dispatch_T!{AddAssign for mut TVec3 add_assign via TVec3AddAssignRHS add_into }
+double_dispatch_T!{SubAssign for mut TVec3 sub_assign via TVec3SubAssignRHS rsb_into }
+double_dispatch_T!{MulAssign for mut TVec3 mul_assign via TVec3MulAssignRHS mul_into }
+double_dispatch_T!{DivAssign for mut TVec3 div_assign via TVec3DivAssignRHS div_into }
+
+double_dispatch_T!{Add for TVec4 add via TVec4AddRHS rev_add}
+double_dispatch_T!{Sub for TVec4 sub via TVec4SubRHS rev_sub}
+double_dispatch_T!{Mul for TVec4 mul via TVec4MulRHS rev_mul}
+double_dispatch_T!{Div for TVec4 div via TVec4DivRHS rev_div}
+double_dispatch_T!{AddAssign for mut TVec4 add_assign via TVec4AddAssignRHS add_into }
+double_dispatch_T!{SubAssign for mut TVec4 sub_assign via TVec4SubAssignRHS rsb_into }
+double_dispatch_T!{MulAssign for mut TVec4 mul_assign via TVec4MulAssignRHS mul_into }
+double_dispatch_T!{DivAssign for mut TVec4 div_assign via TVec4DivAssignRHS div_into }
+
+macro_rules! double_dispatch_usual_impls_2 {
+    ( $ft:ty $op:ident
+      $V_RHS_trait:ident { $v_rev_method:ident }
+      $S_RHS_trait:ident { $s_rev_method:ident }
+      $ASSIGN_RHS_trait:ident { $op_into_method:ident }
+      ) => {
+        impl $V_RHS_trait<$ft> for $ft {
+            fn $v_rev_method(&self, lhs: &TVec2<$ft>) -> TVec2<$ft> {
+                TVec2 { x: lhs.x.$op(self), y: lhs.y.$op(self) }
+            }
+        }
+
+        impl $S_RHS_trait<$ft,TVec2<$ft>> for TVec2<$ft> {
+            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec2<$ft> {
+                let &S(lhs) = lhs;
+                TVec2 { x: lhs.$op(&self.x), y: lhs.$op(&self.y) }
+            }
+        }
+
+        impl $V_RHS_trait<$ft> for TVec2<$ft> {
+            fn $v_rev_method(&self, lhs: &TVec2<$ft>) -> TVec2<$ft> {
+                TVec2 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y) }
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for $ft {
+            fn $op_into_method(&self, recv: &mut TVec2<$ft>) {
+                recv.x = recv.x.$op(self);
+                recv.y = recv.y.$op(self);
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for TVec2<$ft> {
+            fn $op_into_method(&self, recv: &mut TVec2<$ft>) {
+                recv.x = recv.x.$op(&self.x);
+                recv.y = recv.y.$op(&self.y);
+            }
+        }
     }
 }
 
-impl SAddRHS<f32,TVec2<f32>> for TVec2<f32> {
-    fn rev_add(&self, lhs: &S<f32>) -> TVec2<f32> {
-        let &S(lhs) = lhs;
-        TVec2 { x: lhs + self.x, y: lhs + self.y }
+double_dispatch_usual_impls_2! { f32 add
+                                 TVec2AddRHS { rev_add } SAddRHS { rev_add }
+                                 TVec2AddAssignRHS { add_into } }
+double_dispatch_usual_impls_2! { f32 sub
+                                 TVec2SubRHS { rev_sub } SSubRHS { rev_sub }
+                                 TVec2SubAssignRHS { rsb_into } }
+double_dispatch_usual_impls_2! { f32 mul
+                                 TVec2MulRHS { rev_mul } SMulRHS { rev_mul }
+                                 TVec2MulAssignRHS { mul_into } }
+double_dispatch_usual_impls_2! { f32 div
+                                 TVec2DivRHS { rev_div } SDivRHS { rev_div }
+                                 TVec2DivAssignRHS { div_into } }
+
+macro_rules! double_dispatch_usual_impls_3 {
+    ( $ft:ty $op:ident
+      $V_RHS_trait:ident { $v_rev_method:ident }
+      $S_RHS_trait:ident { $s_rev_method:ident }
+      $ASSIGN_RHS_trait:ident { $op_into_method:ident }
+      ) => {
+        impl $V_RHS_trait<$ft> for $ft {
+            fn $v_rev_method(&self, lhs: &TVec3<$ft>) -> TVec3<$ft> {
+                TVec3 { x: lhs.x.$op(self), y: lhs.y.$op(self), z: lhs.z.$op(self) }
+            }
+        }
+
+        impl $S_RHS_trait<$ft,TVec3<$ft>> for TVec3<$ft> {
+            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec3<$ft> {
+                let &S(lhs) = lhs;
+                TVec3 { x: lhs.$op(&self.x), y: lhs.$op(&self.y), z: lhs.$op(&self.z) }
+            }
+        }
+
+        impl $V_RHS_trait<$ft> for TVec3<$ft> {
+            fn $v_rev_method(&self, lhs: &TVec3<$ft>) -> TVec3<$ft> {
+                TVec3 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z) }
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for $ft {
+            fn $op_into_method(&self, recv: &mut TVec3<$ft>) {
+                recv.x = recv.x.$op(self);
+                recv.y = recv.y.$op(self);
+                recv.z = recv.z.$op(self);
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for TVec3<$ft> {
+            fn $op_into_method(&self, recv: &mut TVec3<$ft>) {
+                recv.x = recv.x.$op(&self.x);
+                recv.y = recv.y.$op(&self.y);
+                recv.z = recv.z.$op(&self.z);
+            }
+        }
     }
 }
 
-impl TVec2AddRHS<f32> for TVec2<f32> {
-    fn rev_add(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: self.x + lhs.x, y: self.y + lhs.y }
-    }
-}
+double_dispatch_usual_impls_3! { f32 add
+                                 TVec3AddRHS { rev_add } SAddRHS { rev_add }
+                                 TVec3AddAssignRHS { add_into } }
+double_dispatch_usual_impls_3! { f32 sub
+                                 TVec3SubRHS { rev_sub } SSubRHS { rev_sub }
+                                 TVec3SubAssignRHS { rsb_into } }
+double_dispatch_usual_impls_3! { f32 mul
+                                 TVec3MulRHS { rev_mul } SMulRHS { rev_mul }
+                                 TVec3MulAssignRHS { mul_into } }
+double_dispatch_usual_impls_3! { f32 div
+                                 TVec3DivRHS { rev_div } SDivRHS { rev_div }
+                                 TVec3DivAssignRHS { div_into } }
 
-pub trait TVec2SubRHS<T> { fn rev_sub(&self, lhs: &TVec2<T>) -> TVec2<T>; }
-
-impl<T,RHS:TVec2SubRHS<T>> Sub<RHS,TVec2<T>> for TVec2<T> {
-    fn sub(&self, rhs: &RHS) -> TVec2<T> { rhs.rev_sub(self) }
-}
-
-impl TVec2SubRHS<f32> for f32 {
-    fn rev_sub(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x - *self, y: lhs.y - *self }
-    }
-}
-
-impl SSubRHS<f32,TVec2<f32>> for TVec2<f32> {
-    fn rev_sub(&self, lhs: &S<f32>) -> TVec2<f32> {
-        let &S(lhs) = lhs;
-        TVec2 { x: lhs - self.x, y: lhs - self.y }
-    }
-}
-
-impl TVec2SubRHS<f32> for TVec2<f32> {
-    fn rev_sub(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x - self.x, y: lhs.y - self.y }
-    }
-}
-
-pub trait TVec2MulRHS<T> { fn rev_mul(&self, lhs: &TVec2<T>) -> TVec2<T>; }
-
-impl<T,RHS:TVec2MulRHS<T>> Mul<RHS,TVec2<T>> for TVec2<T> {
-    fn mul(&self, rhs: &RHS) -> TVec2<T> { rhs.rev_mul(self) }
-}
-
-impl TVec2MulRHS<f32> for f32 {
-    fn rev_mul(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x * *self, y: lhs.y * *self }
-    }
-}
-
-impl SMulRHS<f32, TVec2<f32>> for TVec2<f32> {
-    fn rev_mul(&self, lhs: &S<f32>) -> TVec2<f32> {
-        let &S(lhs) = lhs;
-        TVec2 { x: lhs * self.x, y: lhs * self.y }
-    }
-}
-
-impl TVec2MulRHS<f32> for TVec2<f32> {
-    fn rev_mul(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x * self.x, y: lhs.y * self.y }
-    }
-}
-
-pub trait TVec2DivRHS<T> { fn rev_div(&self, lhs: &TVec2<T>) -> TVec2<T>; }
-
-impl<T,RHS:TVec2DivRHS<T>> Div<RHS,TVec2<T>> for TVec2<T> {
-    fn div(&self, rhs: &RHS) -> TVec2<T> { rhs.rev_div(self) }
-}
-
-impl TVec2DivRHS<f32> for f32 {
-    fn rev_div(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x / *self, y: lhs.y / *self }
-    }
-}
-
-impl TVec2DivRHS<f32> for TVec2<f32> {
-    fn rev_div(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
-        TVec2 { x: lhs.x / self.x, y: lhs.y / self.y }
-    }
-}
-
-impl<T:Num + Clone> TVec2<T> {
-    pub fn postdecrement(&mut self) -> TVec2<T> {
+impl<T:Num + Clone> Decrement for TVec2<T> {
+    fn postdecrement(&mut self) -> TVec2<T> {
         use std::num::One;
         let ret = TVec2{ x: self.x.clone(), y: self.y.clone() };
         self.x = self.x - One::one();
@@ -615,14 +704,16 @@ impl<T:Num + Clone> TVec2<T> {
         ret
     }
 
-    pub fn predecrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
+    fn predecrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
         use std::num::One;
         self.x = self.x - One::one();
         self.y = self.y - One::one();
         self
     }
+}
 
-    pub fn postincrement(&mut self) -> TVec2<T> {
+impl<T:Num + Clone> Increment for TVec2<T> {
+    fn postincrement(&mut self) -> TVec2<T> {
         use std::num::One;
         let ret = TVec2{ x: self.x.clone(), y: self.y.clone() };
         self.x = self.x + One::one();
@@ -630,110 +721,11 @@ impl<T:Num + Clone> TVec2<T> {
         ret
     }
 
-    pub fn preincrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
+    fn preincrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
         use std::num::One;
         self.x = self.x + One::one();
         self.y = self.y + One::one();
         self
-    }
-}
-
-pub trait TVec2AddAssignRHS<T> { fn add_into(&self, recv: &mut TVec2<T>); }
-
-impl<T,RHS:TVec2AddAssignRHS<T>> TVec2<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn add_assign(&mut self, rhs: &RHS) {
-        rhs.add_into(self)
-    }
-}
-
-impl TVec2AddAssignRHS<f32> for f32 {
-    fn add_into(&self, recv: &mut TVec2<f32>) {
-        recv.x += *self;
-        recv.y += *self;
-    }
-}
-
-impl TVec2AddAssignRHS<f32> for TVec2<f32> {
-    fn add_into(&self, recv: &mut TVec2<f32>) {
-        recv.x += self.x;
-        recv.y += self.y;
-    }
-}
-
-pub trait TVec2SubAssignRHS<T> { fn rsb_into(&self, recv: &mut TVec2<T>); }
-
-impl<T,RHS:TVec2SubAssignRHS<T>> TVec2<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn sub_assign(&mut self, rhs: &RHS) {
-        rhs.rsb_into(self)
-    }
-}
-
-impl TVec2SubAssignRHS<f32> for f32 {
-    fn rsb_into(&self, recv: &mut TVec2<f32>) {
-        recv.x -= *self;
-        recv.y -= *self;
-    }
-}
-
-impl TVec2SubAssignRHS<f32> for TVec2<f32> {
-    fn rsb_into(&self, recv: &mut TVec2<f32>) {
-        recv.x -= self.x;
-        recv.y -= self.y;
-    }
-}
-
-pub trait TVec2MulAssignRHS<T> { fn mul_into(&self, recv: &mut TVec2<T>); }
-
-impl<T,RHS:TVec2MulAssignRHS<T>> TVec2<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn mul_assign(&mut self, rhs: &RHS) {
-        rhs.mul_into(self)
-    }
-}
-
-impl TVec2MulAssignRHS<f32> for f32 {
-    fn mul_into(&self, recv: &mut TVec2<f32>) {
-        recv.x *= *self;
-        recv.y *= *self;
-    }
-}
-
-impl TVec2MulAssignRHS<f32> for TVec2<f32> {
-    fn mul_into(&self, recv: &mut TVec2<f32>) {
-        recv.x *= self.x;
-        recv.y *= self.y;
-    }
-}
-
-pub trait TVec2DivAssignRHS<T> { fn div_into(&self, recv: &mut TVec2<T>); }
-
-impl<T,RHS:TVec2DivAssignRHS<T>> TVec2<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn div_assign(&mut self, rhs: &RHS) {
-        rhs.div_into(self)
-    }
-}
-
-impl TVec2DivAssignRHS<f32> for f32 {
-    fn div_into(&self, recv: &mut TVec2<f32>) {
-        recv.x /= *self;
-        recv.y /= *self;
-    }
-}
-
-impl SDivRHS<f32, TVec2<f32>> for TVec2<f32> {
-    fn rev_div(&self, lhs: &S<f32>) -> TVec2<f32> {
-        let &S(lhs) = lhs;
-        TVec2 { x: lhs / self.x, y: lhs / self.y }
-    }
-}
-
-impl TVec2DivAssignRHS<f32> for TVec2<f32> {
-    fn div_into(&self, recv: &mut TVec2<f32>) {
-        recv.x /= self.x;
-        recv.y /= self.y;
     }
 }
 
@@ -761,106 +753,6 @@ impl<T:Neg<T>> Neg<TVec3<T>> for TVec3<T> {
 
 impl<T:Num> DotProduct<T> for TVec3<T> {
     fn dot(&self, rhs: &TVec3<T>) -> T { self.x * rhs.x + self.y * rhs.y + self.z * rhs.z }
-}
-
-pub trait TVec3AddRHS<T> { fn rev_add(&self, lhs: &TVec3<T>) -> TVec3<T>; }
-
-impl<T,RHS:TVec3AddRHS<T>> Add<RHS,TVec3<T>> for TVec3<T> {
-    fn add(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_add(self) }
-}
-
-impl TVec3AddRHS<f32> for f32 {
-    fn rev_add(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3 { x: self + lhs.x, y: self + lhs.y, z: self + lhs.z }
-    }
-}
-
-impl SAddRHS<f32,TVec3<f32>> for TVec3<f32> {
-    fn rev_add(&self, lhs: &S<f32>) -> TVec3<f32> {
-        let &S(lhs) = lhs;
-        TVec3 { x: lhs + self.x, y: lhs + self.y, z: lhs + self.z }
-    }
-}
-
-impl TVec3AddRHS<f32> for TVec3<f32> {
-    fn rev_add(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3 { x: self.x + lhs.x, y: self.y + lhs.y, z: self.z + lhs.z }
-    }
-}
-
-pub trait TVec3SubRHS<T> { fn rev_sub(&self, lhs: &TVec3<T>) -> TVec3<T>; }
-
-impl<T,RHS:TVec3SubRHS<T>> Sub<RHS,TVec3<T>> for TVec3<T> {
-    fn sub(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_sub(self) }
-}
-
-impl TVec3SubRHS<f32> for f32 {
-    fn rev_sub(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3 { x: lhs.x - *self, y: lhs.y - *self, z: lhs.z - *self }
-    }
-}
-
-impl SSubRHS<f32,TVec3<f32>> for TVec3<f32> {
-    fn rev_sub(&self, lhs: &S<f32>) -> TVec3<f32> {
-        let &S(lhs) = lhs;
-        TVec3 { x: lhs - self.x, y: lhs - self.y, z: lhs - self.z }
-    }
-}
-
-impl TVec3SubRHS<f32> for TVec3<f32> {
-    fn rev_sub(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3 { x: lhs.x - self.x, y: lhs.y - self.y, z: lhs.z - self.z }
-    }
-}
-
-pub trait TVec3MulRHS<T> { fn rev_mul(&self, lhs: &TVec3<T>) -> TVec3<T>; }
-
-impl<T,RHS:TVec3MulRHS<T>> Mul<RHS,TVec3<T>> for TVec3<T> {
-    fn mul(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_mul(self) }
-}
-
-impl TVec3MulRHS<f32> for f32 {
-    fn rev_mul(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3{ x: lhs.x * *self, y: lhs.y * *self, z: lhs.z * *self }
-    }
-}
-
-impl SMulRHS<f32,TVec3<f32>> for TVec3<f32> {
-    fn rev_mul(&self, lhs: &S<f32>) -> TVec3<f32> {
-        let &S(lhs) = lhs;
-        TVec3 { x: lhs * self.x, y: lhs * self.y, z: lhs * self.z }
-    }
-}
-
-impl TVec3MulRHS<f32> for TVec3<f32> {
-    fn rev_mul(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3{ x: lhs.x * self.x, y: lhs.y * self.y, z: lhs.z * self.z }
-    }
-}
-
-pub trait TVec3DivRHS<T> { fn rev_div(&self, lhs: &TVec3<T>) -> TVec3<T>; }
-
-impl<T,RHS:TVec3DivRHS<T>> Div<RHS,TVec3<T>> for TVec3<T> {
-    fn div(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_div(self) }
-}
-
-impl TVec3DivRHS<f32> for f32 {
-    fn rev_div(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3{ x: lhs.x / *self, y: lhs.y / *self, z: lhs.z / *self }
-    }
-}
-
-impl SDivRHS<f32,TVec3<f32>> for TVec3<f32> {
-    fn rev_div(&self, lhs: &S<f32>) -> TVec3<f32> {
-        let &S(lhs) = lhs;
-        TVec3 { x: lhs / self.x, y: lhs / self.y, z: lhs / self.z }
-    }
-}
-
-impl TVec3DivRHS<f32> for TVec3<f32> {
-    fn rev_div(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
-        TVec3{ x: lhs.x / self.x, y: lhs.y / self.y, z: lhs.z / self.z }
-    }
 }
 
 impl<T:Num + Clone> TVec3<T> {
@@ -899,106 +791,12 @@ impl<T:Num + Clone> TVec3<T> {
     }
 }
 
-pub trait TVec3AddAssignRHS<T> { fn add_into(&self, recv: &mut TVec3<T>); }
-
 impl<T,RHS:TVec3AddAssignRHS<T>> TVec3<T> {
     /// Placeholder for an assumed future `+=` operator.
     pub fn add_assign(&mut self, rhs: &RHS) {
         rhs.add_into(self)
     }
 }
-
-impl TVec3AddAssignRHS<f32> for f32 {
-    fn add_into(&self, recv: &mut TVec3<f32>) {
-        recv.x += *self;
-        recv.y += *self;
-        recv.z += *self;
-    }
-}
-
-impl TVec3AddAssignRHS<f32> for TVec3<f32> {
-    fn add_into(&self, recv: &mut TVec3<f32>) {
-        recv.x += self.x;
-        recv.y += self.y;
-        recv.z += self.z;
-    }
-}
-
-pub trait TVec3SubAssignRHS<T> { fn rsb_into(&self, recv: &mut TVec3<T>); }
-
-impl<T,RHS:TVec3SubAssignRHS<T>> TVec3<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn sub_assign(&mut self, rhs: &RHS) {
-        rhs.rsb_into(self)
-    }
-}
-
-impl TVec3SubAssignRHS<f32> for f32 {
-    fn rsb_into(&self, recv: &mut TVec3<f32>) {
-        recv.x -= *self;
-        recv.y -= *self;
-        recv.z -= *self;
-    }
-}
-
-impl TVec3SubAssignRHS<f32> for TVec3<f32> {
-    fn rsb_into(&self, recv: &mut TVec3<f32>) {
-        recv.x -= self.x;
-        recv.y -= self.y;
-        recv.z -= self.z;
-    }
-}
-
-pub trait TVec3MulAssignRHS<T> { fn mul_into(&self, recv: &mut TVec3<T>); }
-
-impl<T,RHS:TVec3MulAssignRHS<T>> TVec3<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn mul_assign(&mut self, rhs: &RHS) {
-        rhs.mul_into(self)
-    }
-}
-
-impl TVec3MulAssignRHS<f32> for f32 {
-    fn mul_into(&self, recv: &mut TVec3<f32>) {
-        recv.x *= *self;
-        recv.y *= *self;
-        recv.z *= *self;
-    }
-}
-
-impl TVec3MulAssignRHS<f32> for TVec3<f32> {
-    fn mul_into(&self, recv: &mut TVec3<f32>) {
-        recv.x *= self.x;
-        recv.y *= self.y;
-        recv.z *= self.z;
-    }
-}
-
-pub trait TVec3DivAssignRHS<T> { fn div_into(&self, recv: &mut TVec3<T>); }
-
-impl<T,RHS:TVec3DivAssignRHS<T>> TVec3<T> {
-    /// Placeholder for an assumed future `+=` operator.
-    pub fn div_assign(&mut self, rhs: &RHS) {
-        rhs.div_into(self)
-    }
-}
-
-impl TVec3DivAssignRHS<f32> for f32 {
-    fn div_into(&self, recv: &mut TVec3<f32>) {
-        recv.x /= *self;
-        recv.y /= *self;
-        recv.z /= *self;
-    }
-}
-
-impl TVec3DivAssignRHS<f32> for TVec3<f32> {
-    fn div_into(&self, recv: &mut TVec3<f32>) {
-        recv.x /= self.x;
-        recv.y /= self.y;
-        recv.z /= self.z;
-    }
-}
-
 
 pub trait Vec4Args { fn make(self) -> vec4; }
 pub fn vec4<Args:Vec4Args>(args: Args) -> vec4 { args.make() }
@@ -1013,18 +811,6 @@ impl<T:Num> DotProduct<T> for TVec4<T> {
     fn dot(&self, rhs: &TVec4<T>) -> T {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
     }
-}
-
-pub trait TVec4AddRHS<T> { fn rev_add(&self, lhs: &TVec4<T>) -> TVec4<T>; }
-
-impl<T,RHS:TVec4AddRHS<T>> Add<RHS,TVec4<T>> for TVec4<T> {
-    fn add(&self, rhs: &RHS) -> TVec4<T> { rhs.rev_add(self) }
-}
-
-pub trait TVec4SubRHS<T> { fn rev_sub(&self, lhs: &TVec4<T>) -> TVec4<T>; }
-
-impl<T,RHS:TVec4SubRHS<T>> Sub<RHS,TVec4<T>> for TVec4<T> {
-    fn sub(&self, rhs: &RHS) -> TVec4<T> { rhs.rev_sub(self) }
 }
 
 #[cfg(test)]
@@ -1062,6 +848,8 @@ mod vec2_tests {
     #![allow(uppercase_variables)]
     use super::vec2;
     use super::S;
+    use super::{AddAssign,SubAssign,MulAssign,DivAssign};
+    use super::{Increment, Decrement};
 
     #[test]
     fn test_operators() {
@@ -1231,7 +1019,8 @@ mod vec3_tests {
     use super::{ivec3};
     use super::dot;
     use super::S;
-    use super::{Swizzle2, Swizzle3, Swizzle4};
+    use super::{SubAssign,MulAssign,DivAssign};
+    use super::{Swizzle2,Swizzle3,Swizzle4};
     use super::{Increment,Decrement};
 
     #[test]
