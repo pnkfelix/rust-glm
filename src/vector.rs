@@ -1,5 +1,5 @@
-use super::typedefs::{vec1,vec2};
-use super::typedefs::{ivec1};
+use super::typedefs::{vec1,vec2,vec3,vec4};
+use super::typedefs::{ivec1,ivec2,ivec3};
 
 /// Scalar value of type T.  (New type wrapper to ease operator overloading.)
 pub struct S<T>(pub T);
@@ -32,6 +32,405 @@ impl<T,Result,RHS:SDivRHS<T,Result>> Div<RHS,Result> for S<T> {
     }
 }
 
+pub trait Increment {
+    fn postincrement(&mut self) -> Self;
+    fn preincrement<'a>(&'a mut self) -> &'a mut Self;
+}
+
+pub trait Decrement {
+    fn postdecrement(&mut self) -> Self;
+    fn predecrement<'a>(&'a mut self) -> &'a mut Self;
+}
+
+impl Increment for i32 {
+    fn postincrement(&mut self) -> i32 { let r = *self; *self = *self + 1; r }
+    fn preincrement<'a>(&'a mut self) -> &'a mut i32 { *self = *self + 1; self }
+}
+impl Increment for i64 {
+    fn postincrement(&mut self) -> i64 { let r = *self; *self = *self + 1; r }
+    fn preincrement<'a>(&'a mut self) -> &'a mut i64 { *self = *self + 1; self }
+}
+impl Increment for int {
+    fn postincrement(&mut self) -> int { let r = *self; *self = *self + 1; r }
+    fn preincrement<'a>(&'a mut self) -> &'a mut int { *self = *self + 1; self }
+}
+
+impl Decrement for i32 {
+    fn postdecrement(&mut self) -> i32 { let r = *self; *self = *self + 1; r }
+    fn predecrement<'a>(&'a mut self) -> &'a mut i32 { *self = *self + 1; self }
+}
+impl Decrement for i64 {
+    fn postdecrement(&mut self) -> i64 { let r = *self; *self = *self + 1; r }
+    fn predecrement<'a>(&'a mut self) -> &'a mut i64 { *self = *self + 1; self }
+}
+impl Decrement for int {
+    fn postdecrement(&mut self) -> int { let r = *self; *self = *self + 1; r }
+    fn predecrement<'a>(&'a mut self) -> &'a mut int { *self = *self + 1; self }
+}
+
+pub trait DotProduct<T> {
+    fn dot(&self, &Self) -> T;
+}
+
+pub fn dot<T,V:DotProduct<T>>(x: V, y: V) -> T { x.dot(&y) }
+
+trait Swizzle2<T> {
+    fn x(&self) -> T;
+    fn y(&self) -> T;
+
+    fn xx(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.x() } }
+    fn xy(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.y() } }
+    fn yx(&self) -> TVec2<T> { TVec2 { x: self.y(), y: self.x() } }
+    fn yy(&self) -> TVec2<T> { TVec2 { x: self.y(), y: self.y() } }
+
+    fn xxx(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.x(), z: self.x() } }
+    fn xxy(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.x(), z: self.y() } }
+    fn xyx(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.y(), z: self.x() } }
+    fn xyy(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.y(), z: self.y() } }
+    fn yxx(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.x(), z: self.x() } }
+    fn yxy(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.x(), z: self.y() } }
+    fn yyx(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.y(), z: self.x() } }
+    fn yyy(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.y(), z: self.y() } }
+
+    fn xxxx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.x(), w: self.x() } }
+    fn xxxy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.x(), w: self.y() } }
+    fn xxyx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.y(), w: self.x() } }
+    fn xxyy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.y(), w: self.y() } }
+    fn xyxx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.x(), w: self.x() } }
+    fn xyxy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.x(), w: self.y() } }
+    fn xyyx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.y(), w: self.x() } }
+    fn xyyy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.y(), w: self.y() } }
+    fn yxxx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.x(), w: self.x() } }
+    fn yxxy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.x(), w: self.y() } }
+    fn yxyx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.y(), w: self.x() } }
+    fn yxyy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.y(), w: self.y() } }
+    fn yyxx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.x(), w: self.x() } }
+    fn yyxy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.x(), w: self.y() } }
+    fn yyyx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.y(), w: self.x() } }
+    fn yyyy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.y(), w: self.y() } }
+}
+trait Swizzle3<T> : Swizzle2<T> {
+    fn z(&self) -> T;
+
+    fn xz(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.z() } }
+    fn yz(&self) -> TVec2<T> { TVec2 { x: self.y(), y: self.z() } }
+    fn zx(&self) -> TVec2<T> { TVec2 { x: self.z(), y: self.x() } }
+    fn zy(&self) -> TVec2<T> { TVec2 { x: self.z(), y: self.y() } }
+    fn zz(&self) -> TVec2<T> { TVec2 { x: self.z(), y: self.z() } }
+
+    fn xxz(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.x(), z: self.z() } }
+    fn xyz(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.y(), z: self.z() } }
+    fn xzx(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.z(), z: self.x() } }
+    fn xzy(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.z(), z: self.y() } }
+    fn xzz(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.z(), z: self.z() } }
+    fn yxz(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.x(), z: self.z() } }
+    fn yyz(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.y(), z: self.z() } }
+    fn yzx(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.z(), z: self.x() } }
+    fn yzy(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.z(), z: self.y() } }
+    fn yzz(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.z(), z: self.z() } }
+    fn zxx(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.x(), z: self.x() } }
+    fn zxy(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.x(), z: self.y() } }
+    fn zxz(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.x(), z: self.z() } }
+    fn zyx(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.y(), z: self.x() } }
+    fn zyy(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.y(), z: self.y() } }
+    fn zyz(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.y(), z: self.z() } }
+    fn zzx(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.z(), z: self.x() } }
+    fn zzy(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.z(), z: self.y() } }
+    fn zzz(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.z(), z: self.z() } }
+
+
+    fn xxxz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.x(), w: self.z() } }
+    fn xxyz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.y(), w: self.z() } }
+    fn xxzx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.z(), w: self.x() } }
+    fn xxzy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.z(), w: self.y() } }
+    fn xxzz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.z(), w: self.z() } }
+    fn xyxz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.x(), w: self.z() } }
+    fn xyyz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.y(), w: self.z() } }
+    fn xyzx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.z(), w: self.x() } }
+    fn xyzy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.z(), w: self.y() } }
+    fn xyzz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.z(), w: self.z() } }
+    fn xzxx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.x(), w: self.x() } }
+    fn xzxy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.x(), w: self.y() } }
+    fn xzxz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.x(), w: self.z() } }
+    fn xzyx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.y(), w: self.x() } }
+    fn xzyy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.y(), w: self.y() } }
+    fn xzyz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.y(), w: self.z() } }
+    fn xzzx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.z(), w: self.x() } }
+    fn xzzy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.z(), w: self.y() } }
+    fn xzzz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.z(), w: self.z() } }
+
+    fn yxxz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.x(), w: self.z() } }
+    fn yxyz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.y(), w: self.z() } }
+    fn yxzx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.z(), w: self.x() } }
+    fn yxzy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.z(), w: self.y() } }
+    fn yxzz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.z(), w: self.z() } }
+    fn yyxz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.x(), w: self.z() } }
+    fn yyyz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.y(), w: self.z() } }
+    fn yyzx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.z(), w: self.x() } }
+    fn yyzy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.z(), w: self.y() } }
+    fn yyzz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.z(), w: self.z() } }
+    fn yzxx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.x(), w: self.x() } }
+    fn yzxy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.x(), w: self.y() } }
+    fn yzxz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.x(), w: self.z() } }
+    fn yzyx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.y(), w: self.x() } }
+    fn yzyy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.y(), w: self.y() } }
+    fn yzyz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.y(), w: self.z() } }
+    fn yzzx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.z(), w: self.x() } }
+    fn yzzy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.z(), w: self.y() } }
+    fn yzzz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.z(), w: self.z() } }
+
+    fn zxxx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.x(), w: self.x() } }
+    fn zxxy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.x(), w: self.y() } }
+    fn zxxz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.x(), w: self.z() } }
+    fn zxyx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.y(), w: self.x() } }
+    fn zxyz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.y(), w: self.z() } }
+    fn zxzx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.z(), w: self.x() } }
+    fn zxzy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.z(), w: self.y() } }
+    fn zxzz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.z(), w: self.z() } }
+    fn zyxx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.x(), w: self.x() } }
+    fn zyxy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.x(), w: self.y() } }
+    fn zyxz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.x(), w: self.z() } }
+    fn zyyx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.y(), w: self.x() } }
+    fn zyyy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.y(), w: self.y() } }
+    fn zyyz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.y(), w: self.z() } }
+    fn zyzx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.z(), w: self.x() } }
+    fn zyzy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.z(), w: self.y() } }
+    fn zyzz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.z(), w: self.z() } }
+    fn zzxx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.x(), w: self.x() } }
+    fn zzxy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.x(), w: self.y() } }
+    fn zzxz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.x(), w: self.z() } }
+    fn zzyx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.y(), w: self.x() } }
+    fn zzyy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.y(), w: self.y() } }
+    fn zzyz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.y(), w: self.z() } }
+    fn zzzx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.z(), w: self.x() } }
+    fn zzzy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.z(), w: self.y() } }
+    fn zzzz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.z(), w: self.z() } }
+}
+trait Swizzle4<T> : Swizzle3<T> {
+    fn w(&self) -> T;
+    fn xw(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.y() } }
+    fn yw(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.y() } }
+    fn zw(&self) -> TVec2<T> { TVec2 { x: self.x(), y: self.y() } }
+
+    fn xxw(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.x(), z: self.w() } }
+    fn xyw(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.y(), z: self.w() } }
+    fn xzw(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.z(), z: self.w() } }
+    fn xwx(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.w(), z: self.x() } }
+    fn xwy(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.w(), z: self.y() } }
+    fn xwz(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.w(), z: self.z() } }
+    fn xww(&self) -> TVec3<T> { TVec3 { x: self.x(), y: self.w(), z: self.w() } }
+
+    fn yxw(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.x(), z: self.w() } }
+    fn yyw(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.y(), z: self.w() } }
+    fn yzw(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.z(), z: self.w() } }
+    fn ywx(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.w(), z: self.x() } }
+    fn ywy(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.w(), z: self.y() } }
+    fn ywz(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.w(), z: self.z() } }
+    fn yww(&self) -> TVec3<T> { TVec3 { x: self.y(), y: self.w(), z: self.w() } }
+
+    fn zxw(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.x(), z: self.w() } }
+    fn zyw(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.y(), z: self.w() } }
+    fn zzw(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.z(), z: self.w() } }
+    fn zwx(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.w(), z: self.x() } }
+    fn zwy(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.w(), z: self.y() } }
+    fn zwz(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.w(), z: self.z() } }
+    fn zww(&self) -> TVec3<T> { TVec3 { x: self.z(), y: self.w(), z: self.w() } }
+
+    fn wxx(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.x(), z: self.x() } }
+    fn wxy(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.x(), z: self.y() } }
+    fn wxz(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.x(), z: self.z() } }
+    fn wxw(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.x(), z: self.w() } }
+    fn wyx(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.y(), z: self.x() } }
+    fn wyy(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.y(), z: self.y() } }
+    fn wyz(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.y(), z: self.z() } }
+    fn wyw(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.y(), z: self.w() } }
+    fn wzx(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.z(), z: self.x() } }
+    fn wzy(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.z(), z: self.y() } }
+    fn wzz(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.z(), z: self.z() } }
+    fn wzw(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.z(), z: self.w() } }
+    fn wwx(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.w(), z: self.x() } }
+    fn wwy(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.w(), z: self.y() } }
+    fn wwz(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.w(), z: self.z() } }
+    fn www(&self) -> TVec3<T> { TVec3 { x: self.w(), y: self.w(), z: self.w() } }
+
+    fn xxxw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.x(), w: self.w() } }
+    fn xxyw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.y(), w: self.w() } }
+    fn xxzw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.z(), w: self.w() } }
+    fn xxww(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.x(), z: self.w(), w: self.w() } }
+    fn xyxw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.x(), w: self.w() } }
+    fn xyyw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.y(), w: self.w() } }
+    fn xyzw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.z(), w: self.w() } }
+    fn xyww(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.y(), z: self.w(), w: self.w() } }
+    fn xzxw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.x(), w: self.w() } }
+    fn xzyw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.y(), w: self.w() } }
+    fn xzzw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.z(), w: self.w() } }
+    fn xzww(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.z(), z: self.w(), w: self.w() } }
+    fn xwxx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.x(), w: self.x() } }
+    fn xwxy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.x(), w: self.y() } }
+    fn xwxz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.x(), w: self.z() } }
+    fn xwxw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.x(), w: self.w() } }
+    fn xwyx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.y(), w: self.x() } }
+    fn xwyy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.y(), w: self.y() } }
+    fn xwyz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.y(), w: self.z() } }
+    fn xwyw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.y(), w: self.w() } }
+    fn xwzx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.z(), w: self.x() } }
+    fn xwzy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.z(), w: self.y() } }
+    fn xwzz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.z(), w: self.z() } }
+    fn xwzw(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.z(), w: self.w() } }
+    fn xwwx(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.w(), w: self.x() } }
+    fn xwwy(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.w(), w: self.y() } }
+    fn xwwz(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.w(), w: self.z() } }
+    fn xwww(&self) -> TVec4<T> { TVec4 { x: self.x(), y: self.w(), z: self.w(), w: self.w() } }
+
+    fn yxxw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.x(), w: self.w() } }
+    fn yxyw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.y(), w: self.w() } }
+    fn yxzw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.z(), w: self.w() } }
+    fn yxww(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.x(), z: self.w(), w: self.w() } }
+    fn yyxw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.x(), w: self.w() } }
+    fn yyyw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.y(), w: self.w() } }
+    fn yyzw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.z(), w: self.w() } }
+    fn yyww(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.y(), z: self.w(), w: self.w() } }
+    fn yzxw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.x(), w: self.w() } }
+    fn yzyw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.y(), w: self.w() } }
+    fn yzzw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.z(), w: self.w() } }
+    fn yzww(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.z(), z: self.w(), w: self.w() } }
+    fn ywxx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.x(), w: self.x() } }
+    fn ywxy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.x(), w: self.y() } }
+    fn ywxz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.x(), w: self.z() } }
+    fn ywxw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.x(), w: self.w() } }
+    fn ywyx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.y(), w: self.x() } }
+    fn ywyy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.y(), w: self.y() } }
+    fn ywyz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.y(), w: self.z() } }
+    fn ywyw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.y(), w: self.w() } }
+    fn ywzx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.z(), w: self.x() } }
+    fn ywzy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.z(), w: self.y() } }
+    fn ywzz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.z(), w: self.z() } }
+    fn ywzw(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.z(), w: self.w() } }
+    fn ywwx(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.w(), w: self.x() } }
+    fn ywwy(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.w(), w: self.y() } }
+    fn ywwz(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.w(), w: self.z() } }
+    fn ywww(&self) -> TVec4<T> { TVec4 { x: self.y(), y: self.w(), z: self.w(), w: self.w() } }
+
+    fn zxxw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.x(), w: self.w() } }
+    fn zxyw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.y(), w: self.w() } }
+    fn zxzw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.z(), w: self.w() } }
+    fn zxww(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.x(), z: self.w(), w: self.w() } }
+    fn zyxw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.x(), w: self.w() } }
+    fn zyyw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.y(), w: self.w() } }
+    fn zyzw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.z(), w: self.w() } }
+    fn zyww(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.y(), z: self.w(), w: self.w() } }
+    fn zzxw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.x(), w: self.w() } }
+    fn zzyw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.y(), w: self.w() } }
+    fn zzzw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.z(), w: self.w() } }
+    fn zzww(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.z(), z: self.w(), w: self.w() } }
+    fn zwxx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.x(), w: self.x() } }
+    fn zwxy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.x(), w: self.y() } }
+    fn zwxz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.x(), w: self.z() } }
+    fn zwxw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.x(), w: self.w() } }
+    fn zwyx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.y(), w: self.x() } }
+    fn zwyy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.y(), w: self.y() } }
+    fn zwyz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.y(), w: self.z() } }
+    fn zwyw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.y(), w: self.w() } }
+    fn zwzx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.z(), w: self.x() } }
+    fn zwzy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.z(), w: self.y() } }
+    fn zwzz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.z(), w: self.z() } }
+    fn zwzw(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.z(), w: self.w() } }
+    fn zwwx(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.w(), w: self.x() } }
+    fn zwwy(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.w(), w: self.y() } }
+    fn zwwz(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.w(), w: self.z() } }
+    fn zwww(&self) -> TVec4<T> { TVec4 { x: self.z(), y: self.w(), z: self.w(), w: self.w() } }
+
+    fn wxxx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.x(), w: self.x() } }
+    fn wxxy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.x(), w: self.y() } }
+    fn wxxz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.x(), w: self.z() } }
+    fn wxxw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.x(), w: self.w() } }
+    fn wxyx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.y(), w: self.x() } }
+    fn wxyy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.y(), w: self.y() } }
+    fn wxyz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.y(), w: self.z() } }
+    fn wxyw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.y(), w: self.w() } }
+    fn wxzx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.z(), w: self.x() } }
+    fn wxzy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.z(), w: self.y() } }
+    fn wxzz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.z(), w: self.z() } }
+    fn wxzw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.z(), w: self.w() } }
+    fn wxwx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.w(), w: self.x() } }
+    fn wxwy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.w(), w: self.y() } }
+    fn wxwz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.w(), w: self.z() } }
+    fn wxww(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.x(), z: self.w(), w: self.w() } }
+
+    fn wyxx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.x(), w: self.x() } }
+    fn wyxy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.x(), w: self.y() } }
+    fn wyxz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.x(), w: self.z() } }
+    fn wyxw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.x(), w: self.w() } }
+    fn wyyx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.y(), w: self.x() } }
+    fn wyyy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.y(), w: self.y() } }
+    fn wyyz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.y(), w: self.z() } }
+    fn wyyw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.y(), w: self.w() } }
+    fn wyzx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.z(), w: self.x() } }
+    fn wyzy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.z(), w: self.y() } }
+    fn wyzz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.z(), w: self.z() } }
+    fn wyzw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.z(), w: self.w() } }
+    fn wywx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.w(), w: self.x() } }
+    fn wywy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.w(), w: self.y() } }
+    fn wywz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.w(), w: self.z() } }
+    fn wyww(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.y(), z: self.w(), w: self.w() } }
+
+    fn wzxx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.x(), w: self.x() } }
+    fn wzxy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.x(), w: self.y() } }
+    fn wzxz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.x(), w: self.z() } }
+    fn wzxw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.x(), w: self.w() } }
+    fn wzyx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.y(), w: self.x() } }
+    fn wzyy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.y(), w: self.y() } }
+    fn wzyz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.y(), w: self.z() } }
+    fn wzyw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.y(), w: self.w() } }
+    fn wzzx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.z(), w: self.x() } }
+    fn wzzy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.z(), w: self.y() } }
+    fn wzzz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.z(), w: self.z() } }
+    fn wzzw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.z(), w: self.w() } }
+    fn wzwx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.w(), w: self.x() } }
+    fn wzwy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.w(), w: self.y() } }
+    fn wzwz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.w(), w: self.z() } }
+    fn wzww(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.z(), z: self.w(), w: self.w() } }
+
+    fn wwxx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.x(), w: self.x() } }
+    fn wwxy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.x(), w: self.y() } }
+    fn wwxz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.x(), w: self.z() } }
+    fn wwxw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.x(), w: self.w() } }
+    fn wwyx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.y(), w: self.x() } }
+    fn wwyy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.y(), w: self.y() } }
+    fn wwyz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.y(), w: self.z() } }
+    fn wwyw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.y(), w: self.w() } }
+    fn wwzx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.z(), w: self.x() } }
+    fn wwzy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.z(), w: self.y() } }
+    fn wwzz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.z(), w: self.z() } }
+    fn wwzw(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.z(), w: self.w() } }
+    fn wwwx(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.w(), w: self.x() } }
+    fn wwwy(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.w(), w: self.y() } }
+    fn wwwz(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.w(), w: self.z() } }
+    fn wwww(&self) -> TVec4<T> { TVec4 { x: self.w(), y: self.w(), z: self.w(), w: self.w() } }
+}
+
+impl<T:Clone> Swizzle2<T> for TVec2<T> {
+    fn x(&self) -> T { self.x.clone() }
+    fn y(&self) -> T { self.y.clone() }
+}
+impl<T:Clone> Swizzle2<T> for TVec3<T> {
+    fn x(&self) -> T { self.x.clone() }
+    fn y(&self) -> T { self.y.clone() }
+}
+impl<T:Clone> Swizzle2<T> for TVec4<T> {
+    fn x(&self) -> T { self.x.clone() }
+    fn y(&self) -> T { self.y.clone() }
+}
+impl<T:Clone> Swizzle3<T> for TVec3<T> {
+    fn z(&self) -> T { self.z.clone() }
+}
+impl<T:Clone> Swizzle3<T> for TVec4<T> {
+    fn z(&self) -> T { self.z.clone() }
+}
+impl<T:Clone> Swizzle4<T> for TVec4<T> {
+    fn w(&self) -> T { self.w.clone() }
+}
+
 #[deriving(Eq, Show)]
 pub struct TVec1<T> { x: T, }
 #[deriving(Eq, Show)]
@@ -52,6 +451,47 @@ pub fn ivec1<Args:IVec1Args>(args: Args) -> ivec1 { args.make() }
 impl IVec1Args for i32 { fn make(self) -> ivec1 { TVec1 { x: self } } }
 impl IVec1Args for TVec1<i32> { fn make(self) -> ivec1 { TVec1 { x: self.x } } }
 
+pub trait IVec2Args { fn make(self) -> ivec2; }
+pub fn ivec2<Args:IVec2Args>(args: Args) -> ivec2 { args.make() }
+
+impl IVec2Args for i32 { fn make(self) -> ivec2 { TVec2 { x: self, y: self } } }
+
+pub trait IVec3Args { fn make(self) -> ivec3; }
+pub fn ivec3<Args:IVec3Args>(args: Args) -> ivec3 { args.make() }
+
+impl IVec3Args for i32 { fn make(self) -> ivec3 { TVec3 { x: self, y: self, z: self } } }
+impl IVec3Args for TVec3<i32> { fn make(self) -> ivec3 { TVec3 { x: self.x, y: self.y, z: self.z } } }
+
+impl<T:Num + Clone> Decrement for TVec1<T> {
+    fn postdecrement(&mut self) -> TVec1<T> {
+        use std::num::One;
+        let ret = TVec1{ x: self.x.clone() };
+        self.x = self.x - One::one();
+        ret
+    }
+
+    fn predecrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
+        use std::num::One;
+        self.x = self.x - One::one();
+        self
+    }
+}
+
+impl<T:Num + Clone> Increment for TVec1<T> {
+    fn postincrement(&mut self) -> TVec1<T> {
+        use std::num::One;
+        let ret = TVec1{ x: self.x.clone() };
+        self.x = self.x + One::one();
+        ret
+    }
+
+    fn preincrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
+        use std::num::One;
+        self.x = self.x + One::one();
+        self
+    }
+}
+
 pub trait Vec2Args { fn make(self) -> vec2; }
 
 pub fn vec2<Args:Vec2Args>(args: Args) -> vec2 { args.make() }
@@ -61,11 +501,16 @@ impl Vec2Args for (f32,f32) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { 
 impl Vec2Args for (int,int) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x as f32, y: y as f32 } } }
 impl Vec2Args for (int,f32) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x as f32, y: y } } }
 impl Vec2Args for (f32,int) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x, y: y as f32 } } }
+impl Vec2Args for TVec2<f32> { fn make(self) -> vec2 { self } }
 
 impl<T:Neg<T>> Neg<TVec2<T>> for TVec2<T> {
     fn neg(&self) -> TVec2<T> {
         TVec2 { x: -self.x, y: -self.y }
     }
+}
+
+impl<T:Num> DotProduct<T> for TVec2<T> {
+    fn dot(&self, rhs: &TVec2<T>) -> T { self.x * rhs.x + self.y * rhs.y }
 }
 
 pub trait TVec2AddRHS<T> { fn rev_add(&self, lhs: &TVec2<T>) -> TVec2<T>; }
@@ -158,34 +603,6 @@ impl TVec2DivRHS<f32> for f32 {
 impl TVec2DivRHS<f32> for TVec2<f32> {
     fn rev_div(&self, lhs: &TVec2<f32>) -> TVec2<f32> {
         TVec2 { x: lhs.x / self.x, y: lhs.y / self.y }
-    }
-}
-
-impl<T:Num + Clone> TVec1<T> {
-    pub fn postdecrement(&mut self) -> TVec1<T> {
-        use std::num::One;
-        let ret = TVec1{ x: self.x.clone() };
-        self.x = self.x - One::one();
-        ret
-    }
-
-    pub fn predecrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
-        use std::num::One;
-        self.x = self.x - One::one();
-        self
-    }
-
-    pub fn postincrement(&mut self) -> TVec1<T> {
-        use std::num::One;
-        let ret = TVec1{ x: self.x.clone() };
-        self.x = self.x + One::one();
-        ret
-    }
-
-    pub fn preincrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
-        use std::num::One;
-        self.x = self.x + One::one();
-        self
     }
 }
 
@@ -320,11 +737,302 @@ impl TVec2DivAssignRHS<f32> for TVec2<f32> {
     }
 }
 
+pub trait Vec3Args { fn make(self) -> vec3; }
+
+pub fn vec3<Args:Vec3Args>(args: Args) -> vec3 { args.make() }
+
+impl Vec3Args for f32 { fn make(self) -> vec3 { TVec3 { x: self, y: self, z: self } } }
+impl Vec3Args for int { fn make(self) -> vec3 { TVec3 { x: self as f32, y: self as f32, z: self as f32 } } }
+impl Vec3Args for (f32,f32,f32) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x, y: y, z: z } } }
+impl Vec3Args for (int,int,int) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+impl Vec3Args for (int,f32,int) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x as f32, y: y, z: z as f32 } } }
+impl Vec3Args for [int, ..3] { fn make(self) -> vec3 { let v = self; TVec3 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32 } } }
+impl Vec3Args for (vec2, f32) { fn make(self) -> vec3 { let (v,z) = self; TVec3 { x: v.x, y: v.y, z: z } } }
+impl Vec3Args for (vec2, int) { fn make(self) -> vec3 { let (v,z) = self; TVec3 { x: v.x, y: v.y, z: z as f32 } } }
+impl Vec3Args for (f32, vec2) { fn make(self) -> vec3 { let (x,v) = self; TVec3 { x: x, y: v.x, z: v.y } } }
+impl Vec3Args for (int, vec2) { fn make(self) -> vec3 { let (x,v) = self; TVec3 { x: x as f32, y: v.x, z: v.y } } }
+impl Vec3Args for vec4 { fn make(self) -> vec3 { let v = self; TVec3 { x: v.x, y: v.y, z: v.z } } }
+
+impl<T:Neg<T>> Neg<TVec3<T>> for TVec3<T> {
+    fn neg(&self) -> TVec3<T> {
+        TVec3 { x: -self.x, y: -self.y, z: -self.z }
+    }
+}
+
+impl<T:Num> DotProduct<T> for TVec3<T> {
+    fn dot(&self, rhs: &TVec3<T>) -> T { self.x * rhs.x + self.y * rhs.y + self.z * rhs.z }
+}
+
+pub trait TVec3AddRHS<T> { fn rev_add(&self, lhs: &TVec3<T>) -> TVec3<T>; }
+
+impl<T,RHS:TVec3AddRHS<T>> Add<RHS,TVec3<T>> for TVec3<T> {
+    fn add(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_add(self) }
+}
+
+impl TVec3AddRHS<f32> for f32 {
+    fn rev_add(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3 { x: self + lhs.x, y: self + lhs.y, z: self + lhs.z }
+    }
+}
+
+impl SAddRHS<f32,TVec3<f32>> for TVec3<f32> {
+    fn rev_add(&self, lhs: &S<f32>) -> TVec3<f32> {
+        let &S(lhs) = lhs;
+        TVec3 { x: lhs + self.x, y: lhs + self.y, z: lhs + self.z }
+    }
+}
+
+impl TVec3AddRHS<f32> for TVec3<f32> {
+    fn rev_add(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3 { x: self.x + lhs.x, y: self.y + lhs.y, z: self.z + lhs.z }
+    }
+}
+
+pub trait TVec3SubRHS<T> { fn rev_sub(&self, lhs: &TVec3<T>) -> TVec3<T>; }
+
+impl<T,RHS:TVec3SubRHS<T>> Sub<RHS,TVec3<T>> for TVec3<T> {
+    fn sub(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_sub(self) }
+}
+
+impl TVec3SubRHS<f32> for f32 {
+    fn rev_sub(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3 { x: lhs.x - *self, y: lhs.y - *self, z: lhs.z - *self }
+    }
+}
+
+impl SSubRHS<f32,TVec3<f32>> for TVec3<f32> {
+    fn rev_sub(&self, lhs: &S<f32>) -> TVec3<f32> {
+        let &S(lhs) = lhs;
+        TVec3 { x: lhs - self.x, y: lhs - self.y, z: lhs - self.z }
+    }
+}
+
+impl TVec3SubRHS<f32> for TVec3<f32> {
+    fn rev_sub(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3 { x: lhs.x - self.x, y: lhs.y - self.y, z: lhs.z - self.z }
+    }
+}
+
+pub trait TVec3MulRHS<T> { fn rev_mul(&self, lhs: &TVec3<T>) -> TVec3<T>; }
+
+impl<T,RHS:TVec3MulRHS<T>> Mul<RHS,TVec3<T>> for TVec3<T> {
+    fn mul(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_mul(self) }
+}
+
+impl TVec3MulRHS<f32> for f32 {
+    fn rev_mul(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3{ x: lhs.x * *self, y: lhs.y * *self, z: lhs.z * *self }
+    }
+}
+
+impl SMulRHS<f32,TVec3<f32>> for TVec3<f32> {
+    fn rev_mul(&self, lhs: &S<f32>) -> TVec3<f32> {
+        let &S(lhs) = lhs;
+        TVec3 { x: lhs * self.x, y: lhs * self.y, z: lhs * self.z }
+    }
+}
+
+impl TVec3MulRHS<f32> for TVec3<f32> {
+    fn rev_mul(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3{ x: lhs.x * self.x, y: lhs.y * self.y, z: lhs.z * self.z }
+    }
+}
+
+pub trait TVec3DivRHS<T> { fn rev_div(&self, lhs: &TVec3<T>) -> TVec3<T>; }
+
+impl<T,RHS:TVec3DivRHS<T>> Div<RHS,TVec3<T>> for TVec3<T> {
+    fn div(&self, rhs: &RHS) -> TVec3<T> { rhs.rev_div(self) }
+}
+
+impl TVec3DivRHS<f32> for f32 {
+    fn rev_div(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3{ x: lhs.x / *self, y: lhs.y / *self, z: lhs.z / *self }
+    }
+}
+
+impl SDivRHS<f32,TVec3<f32>> for TVec3<f32> {
+    fn rev_div(&self, lhs: &S<f32>) -> TVec3<f32> {
+        let &S(lhs) = lhs;
+        TVec3 { x: lhs / self.x, y: lhs / self.y, z: lhs / self.z }
+    }
+}
+
+impl TVec3DivRHS<f32> for TVec3<f32> {
+    fn rev_div(&self, lhs: &TVec3<f32>) -> TVec3<f32> {
+        TVec3{ x: lhs.x / self.x, y: lhs.y / self.y, z: lhs.z / self.z }
+    }
+}
+
+impl<T:Num + Clone> TVec3<T> {
+    pub fn postdecrement(&mut self) -> TVec3<T> {
+        use std::num::One;
+        let ret = TVec3{ x: self.x.clone(), y: self.y.clone(), z: self.z.clone() };
+        self.x = self.x - One::one();
+        self.y = self.y - One::one();
+        self.z = self.z - One::one();
+        ret
+    }
+
+    pub fn predecrement<'a>(&'a mut self) -> &'a mut TVec3<T> {
+        use std::num::One;
+        self.x = self.x - One::one();
+        self.y = self.y - One::one();
+        self.z = self.z - One::one();
+        self
+    }
+
+    pub fn postincrement(&mut self) -> TVec3<T> {
+        use std::num::One;
+        let ret = TVec3{ x: self.x.clone(), y: self.y.clone(), z: self.z.clone() };
+        self.x = self.x + One::one();
+        self.y = self.y + One::one();
+        self.z = self.z + One::one();
+        ret
+    }
+
+    pub fn preincrement<'a>(&'a mut self) -> &'a mut TVec3<T> {
+        use std::num::One;
+        self.x = self.x + One::one();
+        self.y = self.y + One::one();
+        self.z = self.z + One::one();
+        self
+    }
+}
+
+pub trait TVec3AddAssignRHS<T> { fn add_into(&self, recv: &mut TVec3<T>); }
+
+impl<T,RHS:TVec3AddAssignRHS<T>> TVec3<T> {
+    /// Placeholder for an assumed future `+=` operator.
+    pub fn add_assign(&mut self, rhs: &RHS) {
+        rhs.add_into(self)
+    }
+}
+
+impl TVec3AddAssignRHS<f32> for f32 {
+    fn add_into(&self, recv: &mut TVec3<f32>) {
+        recv.x += *self;
+        recv.y += *self;
+        recv.z += *self;
+    }
+}
+
+impl TVec3AddAssignRHS<f32> for TVec3<f32> {
+    fn add_into(&self, recv: &mut TVec3<f32>) {
+        recv.x += self.x;
+        recv.y += self.y;
+        recv.z += self.z;
+    }
+}
+
+pub trait TVec3SubAssignRHS<T> { fn rsb_into(&self, recv: &mut TVec3<T>); }
+
+impl<T,RHS:TVec3SubAssignRHS<T>> TVec3<T> {
+    /// Placeholder for an assumed future `+=` operator.
+    pub fn sub_assign(&mut self, rhs: &RHS) {
+        rhs.rsb_into(self)
+    }
+}
+
+impl TVec3SubAssignRHS<f32> for f32 {
+    fn rsb_into(&self, recv: &mut TVec3<f32>) {
+        recv.x -= *self;
+        recv.y -= *self;
+        recv.z -= *self;
+    }
+}
+
+impl TVec3SubAssignRHS<f32> for TVec3<f32> {
+    fn rsb_into(&self, recv: &mut TVec3<f32>) {
+        recv.x -= self.x;
+        recv.y -= self.y;
+        recv.z -= self.z;
+    }
+}
+
+pub trait TVec3MulAssignRHS<T> { fn mul_into(&self, recv: &mut TVec3<T>); }
+
+impl<T,RHS:TVec3MulAssignRHS<T>> TVec3<T> {
+    /// Placeholder for an assumed future `+=` operator.
+    pub fn mul_assign(&mut self, rhs: &RHS) {
+        rhs.mul_into(self)
+    }
+}
+
+impl TVec3MulAssignRHS<f32> for f32 {
+    fn mul_into(&self, recv: &mut TVec3<f32>) {
+        recv.x *= *self;
+        recv.y *= *self;
+        recv.z *= *self;
+    }
+}
+
+impl TVec3MulAssignRHS<f32> for TVec3<f32> {
+    fn mul_into(&self, recv: &mut TVec3<f32>) {
+        recv.x *= self.x;
+        recv.y *= self.y;
+        recv.z *= self.z;
+    }
+}
+
+pub trait TVec3DivAssignRHS<T> { fn div_into(&self, recv: &mut TVec3<T>); }
+
+impl<T,RHS:TVec3DivAssignRHS<T>> TVec3<T> {
+    /// Placeholder for an assumed future `+=` operator.
+    pub fn div_assign(&mut self, rhs: &RHS) {
+        rhs.div_into(self)
+    }
+}
+
+impl TVec3DivAssignRHS<f32> for f32 {
+    fn div_into(&self, recv: &mut TVec3<f32>) {
+        recv.x /= *self;
+        recv.y /= *self;
+        recv.z /= *self;
+    }
+}
+
+impl TVec3DivAssignRHS<f32> for TVec3<f32> {
+    fn div_into(&self, recv: &mut TVec3<f32>) {
+        recv.x /= self.x;
+        recv.y /= self.y;
+        recv.z /= self.z;
+    }
+}
+
+
+pub trait Vec4Args { fn make(self) -> vec4; }
+pub fn vec4<Args:Vec4Args>(args: Args) -> vec4 { args.make() }
+
+impl Vec4Args for f32 { fn make(self) -> vec4 { TVec4 { x: self, y: self, z: self, w: self } } }
+impl Vec4Args for int { fn make(self) -> vec4 { TVec4 { x: self as f32, y: self as f32, z: self as f32, w: self as f32 } } }
+impl Vec4Args for (f32,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w } } }
+impl Vec4Args for (int,int,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+impl Vec4Args for [int, ..4] { fn make(self) -> vec4 { let v = self; TVec4 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32, w: v[3] as f32 } } }
+
+impl<T:Num> DotProduct<T> for TVec4<T> {
+    fn dot(&self, rhs: &TVec4<T>) -> T {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
+    }
+}
+
+pub trait TVec4AddRHS<T> { fn rev_add(&self, lhs: &TVec4<T>) -> TVec4<T>; }
+
+impl<T,RHS:TVec4AddRHS<T>> Add<RHS,TVec4<T>> for TVec4<T> {
+    fn add(&self, rhs: &RHS) -> TVec4<T> { rhs.rev_add(self) }
+}
+
+pub trait TVec4SubRHS<T> { fn rev_sub(&self, lhs: &TVec4<T>) -> TVec4<T>; }
+
+impl<T,RHS:TVec4SubRHS<T>> Sub<RHS,TVec4<T>> for TVec4<T> {
+    fn sub(&self, rhs: &RHS) -> TVec4<T> { rhs.rev_sub(self) }
+}
+
 #[cfg(test)]
 mod vec1_tests {
     #![allow(uppercase_variables)]
     use super::vec1;
     use super::ivec1;
+    use super::{Increment};
 
     #[test]
     fn test_operators() {
@@ -513,5 +1221,196 @@ mod vec2_tests {
         assert_eq!(B, vec2(( 1.0f32, 2.0f32 )));
         assert_eq!(A, vec2(( 2.0f32, 3.0f32 )));
 
+    }
+}
+
+#[cfg(test)]
+mod vec3_tests {
+    #![allow(uppercase_variables)]
+    use super::{vec2, vec3, vec4};
+    use super::{ivec3};
+    use super::dot;
+    use super::S;
+    use super::{Swizzle2, Swizzle3, Swizzle4};
+    use super::{Increment,Decrement};
+
+    #[test]
+    fn test_ctor() {
+        let A = vec3(1);
+        let B = vec3(( 1, 1, 1 ));
+        assert_eq!(A, B);
+
+        let mut Tests = vec![];
+        Tests.push(vec3((vec2((1,2)), 3)));
+        Tests.push(vec3((1, vec2((2,3)))));
+        Tests.push(vec3((1, 2, 3)));
+        Tests.push(vec3(vec4((1, 2, 3, 4))));
+
+        for v in Tests.iter() {
+            assert_eq!(*v, vec3((1, 2, 3)));
+        }
+    }
+
+    #[test]
+    fn test_operators() {
+        let A = vec3(1.0f32);
+        let B = vec3(1.0f32);
+        assert!(A == B);
+
+        let A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+
+        let C = A + B;
+        assert_eq!(C, vec3((5, 7, 9)));
+
+        let D = B - A;
+        assert_eq!(D, vec3((3, 3, 3)));
+
+        let E = A * B;
+        assert_eq!(E, vec3((4, 10, 18)));
+
+        let F = B / A;
+        assert_eq!(F, vec3((4, 2.5f32, 2)));
+
+        let G = A + 1.0f32;
+        assert_eq!(G, vec3((2, 3, 4)));
+
+        let H = B - 1.0f32;
+        assert_eq!(H, vec3((3, 4, 5)));
+
+        let I = A * 2.0f32;
+        assert_eq!(I, vec3((2, 4, 6)));
+
+        let J = B / 2.0f32;
+        assert_eq!(J, vec3((2, 2.5f32, 3)));
+
+        let K = S(1.0f32) + A;
+        assert_eq!(K, vec3((2, 3, 4)));
+
+        let L = S(1.0f32) - B;
+        assert_eq!(L, vec3((-3, -4, -5)));
+
+        let M = S(2.0f32) * A;
+        assert_eq!(M, vec3((2, 4, 6)));
+
+        let N = S(2.0f32) / B;
+        assert_eq!(N, vec3((0.5f32, 2.0f32 / 5.0f32, 2.0f32 / 6.0f32)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+
+        A.add_assign(&B);
+        assert_eq!(A, vec3((5, 7, 9)));
+
+        A.add_assign(&1.0f32);
+        assert_eq!(A, vec3((6, 8, 10)));
+
+        let A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut B = vec3((4.0f32, 5.0f32, 6.0f32));
+
+        B.sub_assign(&A);
+        assert_eq!(B, vec3((3, 3, 3)));
+
+        B.sub_assign(&1.0f32);
+        assert_eq!(B, vec3((2, 2, 2)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+
+        A.mul_assign(&B);
+        assert_eq!(A, vec3((4, 10, 18)));
+
+        A.mul_assign(&2.0f32);
+        assert_eq!(A, vec3((8, 20, 36)));
+
+        let A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut B = vec3((4.0f32, 5.0f32, 6.0f32));
+
+        B.div_assign(&A);
+        assert_eq!(B, vec3((4, 2.5f32, 2)));
+
+        B.div_assign(&2.0f32);
+        assert_eq!(B, vec3((2, 1.25f32, 1)));
+
+        let B = vec3(2.0f32);
+        let mut B = B;
+        let B_y = B.y;
+        B.div_assign(&B_y);
+        assert_eq!(B, vec3(1.0f32));
+
+        let A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = -A;
+        assert_eq!(B, vec3((-1.0f32, -2.0f32, -3.0f32)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = A.predecrement();
+        assert_eq!(*B, vec3((0.0f32, 1.0f32, 2.0f32)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = A.postdecrement();
+        assert_eq!(B, vec3((1.0f32, 2.0f32, 3.0f32)));
+        assert_eq!(A, vec3((0.0f32, 1.0f32, 2.0f32)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = A.preincrement();
+        assert_eq!(*B, vec3((2.0f32, 3.0f32, 4.0f32)));
+
+        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let B = A.postincrement();
+        assert_eq!(B, vec3((1.0f32, 2.0f32, 3.0f32)));
+        assert_eq!(A, vec3((2.0f32, 3.0f32, 4.0f32)));
+    }
+
+    #[test]
+    fn test_swizzle_functions() {
+        // vec2
+        let a = vec2((1, 2));
+        let b = vec2((10, 20));
+        let r = dot(a, b);                       assert_eq!(r as int, 50);
+        let r = dot(vec2(a.xy()), vec2(b.xy())); assert_eq!(r as int, 50);
+        let r = dot(vec2(a.xy()), vec2(b.yy())); assert_eq!(r as int, 60);
+
+        // vec3
+        let u = vec3((1, 2, 3));
+        let v = vec3((10, 20, 30));
+        let r = dot(u, v);                       assert_eq!(r as int, 140);
+        let r = dot(u.xyz(), v.zyz());           assert_eq!(r as int, 160);
+        let r = dot(u, v.zyx());                 assert_eq!(r as int, 100);
+        let r = dot(u.xyz(), v);                 assert_eq!(r as int, 140);
+        let r = dot(u.xy(), v.xy());             assert_eq!(r as int, 50);
+
+        // vec4
+        let s = vec4((1, 2, 3, 4));
+        let t = vec4((10, 20, 30, 40));
+        let r = dot(s, t);                       assert_eq!(r as int, 300);
+        let r = dot(s.xyzw(), t.xyzw());         assert_eq!(r as int, 300);
+        let r = dot(s.xyz(), t.xyz());           assert_eq!(r as int, 140);
+    }
+
+    #[test]
+    fn test_operator_increment() {
+        let v0 = ivec3(1i32);
+        let mut v1 = ivec3(v0);
+        let mut v2 = ivec3(v0);
+        let v3 = v1.preincrement();
+        let v4 = v2.postincrement();
+        let v1 = v1;
+        let v2 = v2;
+
+        assert_eq!(v0, v4);
+        assert_eq!(v1, v2);
+        assert_eq!(v1, *v3);
+
+        let i0 = 1i32;
+        let mut i1 = i0;
+        let mut i2 = i0;
+        let i3 = i1.preincrement();
+        let i4 = i2.postincrement();
+        let i1 = i1;
+        let i2 = i2;
+
+        assert_eq!(i0, i4);
+        assert_eq!(i1, i2);
+        assert_eq!(i1, *i3);
     }
 }
