@@ -578,6 +578,64 @@ double_dispatch_usual_impls_3! { f32 div
                                  TVec3DivRHS { rev_div } SDivRHS { rev_div }
                                  TVec3DivAssignRHS { div_into } }
 
+macro_rules! double_dispatch_usual_impls_4 {
+    ( $ft:ty $op:ident
+      $V_RHS_trait:ident { $v_rev_method:ident }
+      $S_RHS_trait:ident { $s_rev_method:ident }
+      $ASSIGN_RHS_trait:ident { $op_into_method:ident }
+      ) => {
+        impl $V_RHS_trait<$ft> for $ft {
+            fn $v_rev_method(&self, lhs: &TVec4<$ft>) -> TVec4<$ft> {
+                TVec4 { x: lhs.x.$op(self), y: lhs.y.$op(self), z: lhs.z.$op(self), w: lhs.w.$op(self) }
+            }
+        }
+
+        impl $S_RHS_trait<$ft,TVec4<$ft>> for TVec4<$ft> {
+            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec4<$ft> {
+                let &S(lhs) = lhs;
+                TVec4 { x: lhs.$op(&self.x), y: lhs.$op(&self.y), z: lhs.$op(&self.z), w: lhs.$op(&self.w) }
+            }
+        }
+
+        impl $V_RHS_trait<$ft> for TVec4<$ft> {
+            fn $v_rev_method(&self, lhs: &TVec4<$ft>) -> TVec4<$ft> {
+                TVec4 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z), w: lhs.w.$op(&self.w) }
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for $ft {
+            fn $op_into_method(&self, recv: &mut TVec4<$ft>) {
+                recv.x = recv.x.$op(self);
+                recv.y = recv.y.$op(self);
+                recv.z = recv.z.$op(self);
+                recv.w = recv.w.$op(self);
+            }
+        }
+
+        impl $ASSIGN_RHS_trait<$ft> for TVec4<$ft> {
+            fn $op_into_method(&self, recv: &mut TVec4<$ft>) {
+                recv.x = recv.x.$op(&self.x);
+                recv.y = recv.y.$op(&self.y);
+                recv.z = recv.z.$op(&self.z);
+                recv.w = recv.w.$op(&self.w);
+            }
+        }
+    }
+}
+
+double_dispatch_usual_impls_4! { f32 add
+                                 TVec4AddRHS { rev_add } SAddRHS { rev_add }
+                                 TVec4AddAssignRHS { add_into } }
+double_dispatch_usual_impls_4! { f32 sub
+                                 TVec4SubRHS { rev_sub } SSubRHS { rev_sub }
+                                 TVec4SubAssignRHS { rsb_into } }
+double_dispatch_usual_impls_4! { f32 mul
+                                 TVec4MulRHS { rev_mul } SMulRHS { rev_mul }
+                                 TVec4MulAssignRHS { mul_into } }
+double_dispatch_usual_impls_4! { f32 div
+                                 TVec4DivRHS { rev_div } SDivRHS { rev_div }
+                                 TVec4DivAssignRHS { div_into } }
+
 impl<T:Num + Clone> Decrement for TVec2<T> {
     fn postdecrement(&mut self) -> TVec2<T> {
         use std::num::One;
@@ -679,8 +737,29 @@ pub fn vec4<Args:Vec4Args>(args: Args) -> vec4 { args.make() }
 
 impl Vec4Args for f32 { fn make(self) -> vec4 { TVec4 { x: self, y: self, z: self, w: self } } }
 impl Vec4Args for int { fn make(self) -> vec4 { TVec4 { x: self as f32, y: self as f32, z: self as f32, w: self as f32 } } }
-impl Vec4Args for (f32,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w } } }
 impl Vec4Args for (int,int,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (int,int,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w } } }
+impl Vec4Args for (int,int,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z, w: w as f32 } } }
+impl Vec4Args for (int,int,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z, w: w } } }
+impl Vec4Args for (int,f32,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (int,f32,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z as f32, w: w } } }
+impl Vec4Args for (int,f32,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z, w: w as f32 } } }
+impl Vec4Args for (int,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z, w: w } } }
+impl Vec4Args for (f32,int,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (f32,int,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z as f32, w: w } } }
+impl Vec4Args for (f32,int,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z, w: w as f32 } } }
+impl Vec4Args for (f32,int,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z, w: w } } }
+impl Vec4Args for (f32,f32,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (f32,f32,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z as f32, w: w } } }
+impl Vec4Args for (f32,f32,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w as f32 } } }
+impl Vec4Args for (f32,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w } } }
+impl Vec4Args for (vec2, vec2) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},TVec2{x:z,y:w}) = self; TVec4::<f32>{ x: x, y: y, z: z, w: w } } }
+impl Vec4Args for (vec2, int, int) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},z,w) = self; TVec4::<f32>{ x: x, y: y, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (int, vec2, int) { fn make(self) -> vec4 { let (x,TVec2{x:y,y:z},w) = self; TVec4::<f32>{ x: x as f32, y: y, z: z as f32, w: w as f32 } } }
+impl Vec4Args for (int, int, vec2) { fn make(self) -> vec4 { let (x,y,TVec2{x:z,y:w}) = self; TVec4::<f32>{ x: x as f32, y: y as f32, z: z, w: w } } }
+impl Vec4Args for (int, vec3) { fn make(self) -> vec4 { let (x,TVec3{x:y,y:z,z:w}) = self; TVec4::<f32>{ x: x as f32, y: y, z: z, w: w } } }
+impl Vec4Args for (vec3, int) { fn make(self) -> vec4 { let (TVec3{x:x,y:y,z:z},w) = self; TVec4::<f32>{ x: x, y: y, z: z, w: w as f32 } } }
+impl Vec4Args for vec4 { fn make(self) -> vec4 { let TVec4{x:x,y:y,z:z,w:w} = self; TVec4::<f32>{ x: x, y: y, z: z, w: w } } }
 impl Vec4Args for [int, ..4] { fn make(self) -> vec4 { let v = self; TVec4 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32, w: v[3] as f32 } } }
 
 impl<T:Num> DotProduct<T> for TVec4<T> {
@@ -1077,5 +1156,68 @@ mod vec3_tests {
         assert_eq!(i0, i4);
         assert_eq!(i1, i2);
         assert_eq!(i1, *i3);
+    }
+}
+
+#[cfg(test)]
+mod vec4_tests {
+    #![allow(uppercase_variables)]
+
+    use super::{vec2,vec3,vec4};
+    use super::S;
+
+    #[test]
+    fn test_ctor() {
+        let A = vec4(1);
+        let B = vec4((1, 1, 1, 1));
+        assert_eq!(A, B);
+
+        let mut Tests = vec![];
+        Tests.push(vec4((vec2((1, 2)), 3, 4)));
+        Tests.push(vec4((1, vec2((2, 3)), 4)));
+        Tests.push(vec4((1, 2, vec2((3, 4)))));
+        Tests.push(vec4((vec3((1, 2, 3)), 4)));
+        Tests.push(vec4((1, vec3((2, 3, 4)))));
+        Tests.push(vec4((vec2((1, 2)), vec2((3, 4)))));
+        Tests.push(vec4((1, 2, 3, 4)));
+        Tests.push(vec4(vec4((1, 2, 3, 4))));
+
+        for v in Tests.iter() {
+            assert_eq!(*v, vec4((1, 2, 3, 4)));
+        }
+    }
+
+    #[test]
+    fn test_operators() {
+        let A = vec4(1.0f32);
+        let B = vec4(1.0f32);
+        assert!(A == B);
+
+        let A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        let C = A + B;
+        assert_eq!(C, vec4((5, 7, 9, 11)));
+        let D = B - A;
+        assert_eq!(D, vec4((3, 3, 3, 3)));
+        let E = A * B;
+        assert_eq!(E, vec4((4, 10, 18, 28)));
+        let F = B / A;
+        assert_eq!(F, vec4((4, 2.5f32, 2, 7f32 / 4f32)));
+        let G = A + 1f32;
+        assert_eq!(G, vec4((2, 3, 4, 5)));
+        let H = B - 1f32;
+        assert_eq!(H, vec4((3, 4, 5, 6)));
+        let I = A * 2f32;
+        assert_eq!(I, vec4((2, 4, 6, 8)));
+        let J = B / 2f32;
+        assert_eq!(J, vec4((2, 2.5f32, 3, 3.5f32)));
+        let K = S(1f32) + A;
+        assert_eq!(K, vec4((2, 3, 4, 5)));
+        let L = S(1f32) - B;
+        assert_eq!(L, vec4((-3, -4, -5, -6)));
+        let M = S(2f32) * A;
+        assert_eq!(M, vec4((2, 4, 6, 8)));
+        let N = S(2f32) / B;
+        assert_eq!(N, vec4((0.5f32, 2f32 / 5f32, 2f32 / 6f32, 2f32 / 7f32)));
     }
 }
