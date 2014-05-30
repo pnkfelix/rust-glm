@@ -674,17 +674,43 @@ pub trait Vec3Args { fn make(self) -> vec3; }
 
 pub fn vec3<Args:Vec3Args>(args: Args) -> vec3 { args.make() }
 
-impl Vec3Args for f32 { fn make(self) -> vec3 { TVec3 { x: self, y: self, z: self } } }
-impl Vec3Args for int { fn make(self) -> vec3 { TVec3 { x: self as f32, y: self as f32, z: self as f32 } } }
-impl Vec3Args for (f32,f32,f32) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x, y: y, z: z } } }
-impl Vec3Args for (int,int,int) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
-impl Vec3Args for (int,f32,int) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x as f32, y: y, z: z as f32 } } }
-impl Vec3Args for [int, ..3] { fn make(self) -> vec3 { let v = self; TVec3 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32 } } }
-impl Vec3Args for (vec2, f32) { fn make(self) -> vec3 { let (v,z) = self; TVec3 { x: v.x, y: v.y, z: z } } }
-impl Vec3Args for (vec2, int) { fn make(self) -> vec3 { let (v,z) = self; TVec3 { x: v.x, y: v.y, z: z as f32 } } }
-impl Vec3Args for (f32, vec2) { fn make(self) -> vec3 { let (x,v) = self; TVec3 { x: x, y: v.x, z: v.y } } }
-impl Vec3Args for (int, vec2) { fn make(self) -> vec3 { let (x,v) = self; TVec3 { x: x as f32, y: v.x, z: v.y } } }
+macro_rules! impl_Vec3Args_for {
+    ($a:ident,$b:ident,$c:ident) => {
+        impl Vec3Args for ($a,$b,$c) { fn make(self) -> vec3 { let (x,y,z) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+    }
+    ;
+    ($a:ident 2,$b:ident) => {
+        impl Vec3Args for ($a,$b) { fn make(self) -> vec3 { let (TVec2{x:x,y:y},z) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+    }
+    ;
+    ($a:ident,$b:ident 2) => {
+        impl Vec3Args for ($a,$b) { fn make(self) -> vec3 { let (x,TVec2{x:y,y:z}) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+    }
+    ;
+    ($a:ident 3) => {
+        impl Vec3Args for $a { fn make(self) -> vec3 { let TVec3{x:x,y:y,z:z} = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+    }
+    ;
+    ($a:ident copy) => {
+        impl Vec3Args for $a { fn make(self) -> vec3 { TVec3 { x: self as f32, y: self as f32, z: self as f32 } } }
+    }
+}
+
+impl_Vec3Args_for!(f32 copy)
+impl_Vec3Args_for!(int copy)
+impl_Vec3Args_for!(int,int,int)
+impl_Vec3Args_for!(int,int,f32)
+impl_Vec3Args_for!(int,f32,int)
+impl_Vec3Args_for!(int,f32,f32)
+impl_Vec3Args_for!(f32,int,f32)
+impl_Vec3Args_for!(f32,f32,int)
+impl_Vec3Args_for!(f32,f32,f32)
+impl_Vec3Args_for!(vec2 2,f32)
+impl_Vec3Args_for!(vec2 2,int)
+impl_Vec3Args_for!(f32,vec2 2)
+impl_Vec3Args_for!(int,vec2 2)
 impl Vec3Args for vec4 { fn make(self) -> vec3 { let v = self; TVec3 { x: v.x, y: v.y, z: v.z } } }
+impl Vec3Args for [int, ..3] { fn make(self) -> vec3 { let v = self; TVec3 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32 } } }
 
 impl<T:Neg<T>> Neg<TVec3<T>> for TVec3<T> {
     fn neg(&self) -> TVec3<T> {
@@ -735,32 +761,72 @@ impl<T:Num + Clone> TVec3<T> {
 pub trait Vec4Args { fn make(self) -> vec4; }
 pub fn vec4<Args:Vec4Args>(args: Args) -> vec4 { args.make() }
 
-impl Vec4Args for f32 { fn make(self) -> vec4 { TVec4 { x: self, y: self, z: self, w: self } } }
-impl Vec4Args for int { fn make(self) -> vec4 { TVec4 { x: self as f32, y: self as f32, z: self as f32, w: self as f32 } } }
-impl Vec4Args for (int,int,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (int,int,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w } } }
-impl Vec4Args for (int,int,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z, w: w as f32 } } }
-impl Vec4Args for (int,int,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z, w: w } } }
-impl Vec4Args for (int,f32,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (int,f32,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z as f32, w: w } } }
-impl Vec4Args for (int,f32,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z, w: w as f32 } } }
-impl Vec4Args for (int,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y, z: z, w: w } } }
-impl Vec4Args for (f32,int,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (f32,int,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z as f32, w: w } } }
-impl Vec4Args for (f32,int,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z, w: w as f32 } } }
-impl Vec4Args for (f32,int,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y as f32, z: z, w: w } } }
-impl Vec4Args for (f32,f32,int,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (f32,f32,int,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z as f32, w: w } } }
-impl Vec4Args for (f32,f32,f32,int) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w as f32 } } }
-impl Vec4Args for (f32,f32,f32,f32) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x, y: y, z: z, w: w } } }
-impl Vec4Args for (vec2, vec2) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},TVec2{x:z,y:w}) = self; TVec4::<f32>{ x: x, y: y, z: z, w: w } } }
-impl Vec4Args for (vec2, int, int) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},z,w) = self; TVec4::<f32>{ x: x, y: y, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (int, vec2, int) { fn make(self) -> vec4 { let (x,TVec2{x:y,y:z},w) = self; TVec4::<f32>{ x: x as f32, y: y, z: z as f32, w: w as f32 } } }
-impl Vec4Args for (int, int, vec2) { fn make(self) -> vec4 { let (x,y,TVec2{x:z,y:w}) = self; TVec4::<f32>{ x: x as f32, y: y as f32, z: z, w: w } } }
-impl Vec4Args for (int, vec3) { fn make(self) -> vec4 { let (x,TVec3{x:y,y:z,z:w}) = self; TVec4::<f32>{ x: x as f32, y: y, z: z, w: w } } }
-impl Vec4Args for (vec3, int) { fn make(self) -> vec4 { let (TVec3{x:x,y:y,z:z},w) = self; TVec4::<f32>{ x: x, y: y, z: z, w: w as f32 } } }
-impl Vec4Args for vec4 { fn make(self) -> vec4 { let TVec4{x:x,y:y,z:z,w:w} = self; TVec4::<f32>{ x: x, y: y, z: z, w: w } } }
+macro_rules! impl_Vec4Args_for {
+    ($a:ident,$b:ident,$c:ident,$d:ident) => {
+        impl Vec4Args for ($a,$b,$c,$d) { fn make(self) -> vec4 { let (x,y,z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident 2,$b:ident,$c:ident) => {
+        impl Vec4Args for ($a,$b,$c) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},z,w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident,$b:ident 2,$c:ident) => {
+        impl Vec4Args for ($a,$b,$c) { fn make(self) -> vec4 { let (x,TVec2{x:y,y:z},w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident,$b:ident,$c:ident 2) => {
+        impl Vec4Args for ($a,$b,$c) { fn make(self) -> vec4 { let (x,y,TVec2{x:z,y:w}) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident 2,$b:ident 2) => {
+        impl Vec4Args for ($a,$b) { fn make(self) -> vec4 { let (TVec2{x:x,y:y},TVec2{x:z,y:w}) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident 3,$b:ident) => {
+        impl Vec4Args for ($a,$b) { fn make(self) -> vec4 { let (TVec3{x:x,y:y,z:z},w) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident,$b:ident 3) => {
+        impl Vec4Args for ($a,$b) { fn make(self) -> vec4 { let (x,TVec3{x:y,y:z,z:w}) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident 4) => {
+        impl Vec4Args for $a { fn make(self) -> vec4 { let TVec4{x:x,y:y,z:z,w:w} = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    }
+    ;
+    ($a:ident copy) => {
+        impl Vec4Args for $a { fn make(self) -> vec4 { TVec4 { x: self as f32, y: self as f32, z: self as f32, w: self as f32 } } }
+    }
+}
+
+
 impl Vec4Args for [int, ..4] { fn make(self) -> vec4 { let v = self; TVec4 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32, w: v[3] as f32 } } }
+
+impl_Vec4Args_for!(f32 copy)
+impl_Vec4Args_for!(int copy)
+impl_Vec4Args_for!(int,int,int,int)
+impl_Vec4Args_for!(int,int,int,f32)
+impl_Vec4Args_for!(int,int,f32,int)
+impl_Vec4Args_for!(int,int,f32,f32)
+impl_Vec4Args_for!(int,f32,int,int)
+impl_Vec4Args_for!(int,f32,int,f32)
+impl_Vec4Args_for!(int,f32,f32,int)
+impl_Vec4Args_for!(int,f32,f32,f32)
+impl_Vec4Args_for!(f32,int,int,int)
+impl_Vec4Args_for!(f32,int,int,f32)
+impl_Vec4Args_for!(f32,int,f32,int)
+impl_Vec4Args_for!(f32,int,f32,f32)
+impl_Vec4Args_for!(f32,f32,int,int)
+impl_Vec4Args_for!(f32,f32,int,f32)
+impl_Vec4Args_for!(f32,f32,f32,int)
+impl_Vec4Args_for!(f32,f32,f32,f32)
+impl_Vec4Args_for!(vec2 2,int,int)
+impl_Vec4Args_for!(int, vec2 2,int)
+impl_Vec4Args_for!(int, int, vec2 2)
+impl_Vec4Args_for!(vec2 2,vec2 2)
+impl_Vec4Args_for!(int, vec3 3)
+impl_Vec4Args_for!(vec3 3, int)
+impl_Vec4Args_for!(vec4 4)
 
 impl<T:Num> DotProduct<T> for TVec4<T> {
     fn dot(&self, rhs: &TVec4<T>) -> T {
