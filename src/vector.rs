@@ -365,6 +365,45 @@ pub fn ivec3<Args:IVec3Args>(args: Args) -> ivec3 { args.make() }
 impl IVec3Args for i32 { fn make(self) -> ivec3 { TVec3 { x: self, y: self, z: self } } }
 impl IVec3Args for TVec3<i32> { fn make(self) -> ivec3 { TVec3 { x: self.x, y: self.y, z: self.z } } }
 
+macro_rules! impl_IncrementDecrement_for {
+    ($TVec:ident $($x:ident),*) => {
+        impl<T:Num + Clone> Increment for $TVec<T> {
+            fn postincrement(&mut self) -> $TVec<T> {
+                use std::num::One;
+                let ret = $TVec{ $( $x: self.$x.clone() ),* };
+                $( self.$x = self.$x + One::one(); )*
+                ret
+            }
+
+            fn preincrement<'a>(&'a mut self) -> &'a mut $TVec<T> {
+                use std::num::One;
+                $( self.$x = self.$x + One::one(); )*
+                self
+            }
+        }
+
+        impl<T:Num + Clone> Decrement for $TVec<T> {
+            fn postdecrement(&mut self) -> $TVec<T> {
+                use std::num::One;
+                let ret = $TVec{ $( $x: self.$x.clone() ),* };
+                $( self.$x = self.$x - One::one(); )*
+                ret
+            }
+
+            fn predecrement<'a>(&'a mut self) -> &'a mut $TVec<T> {
+                use std::num::One;
+                $( self.$x = self.$x - One::one(); )*
+                self
+            }
+        }
+    }
+}
+
+impl_IncrementDecrement_for!{ TVec1 x }
+impl_IncrementDecrement_for!{ TVec2 x, y }
+impl_IncrementDecrement_for!{ TVec3 x, y, z }
+impl_IncrementDecrement_for!{ TVec4 x, y, z, w }
+/*
 impl<T:Num + Clone> Decrement for TVec1<T> {
     fn postdecrement(&mut self) -> TVec1<T> {
         use std::num::One;
@@ -394,6 +433,7 @@ impl<T:Num + Clone> Increment for TVec1<T> {
         self
     }
 }
+*/
 
 pub trait Vec2Args { fn make(self) -> vec2; }
 
@@ -652,6 +692,7 @@ double_dispatch_usual_impls_4! { f32 div
                                  TVec4DivRHS { rev_div } SDivRHS { rev_div }
                                  TVec4DivAssignRHS { div_into } }
 
+/*
 impl<T:Num + Clone> Decrement for TVec2<T> {
     fn postdecrement(&mut self) -> TVec2<T> {
         use std::num::One;
@@ -685,6 +726,7 @@ impl<T:Num + Clone> Increment for TVec2<T> {
         self
     }
 }
+*/
 
 pub trait Vec3Args { fn make(self) -> vec3; }
 
@@ -838,11 +880,22 @@ impl_Vec4Args_for!(f32,f32,int,f32)
 impl_Vec4Args_for!(f32,f32,f32,int)
 impl_Vec4Args_for!(f32,f32,f32,f32)
 impl_Vec4Args_for!(vec2 2,int,int)
+impl_Vec4Args_for!(vec2 2,int,f32)
+impl_Vec4Args_for!(vec2 2,f32,int)
+impl_Vec4Args_for!(vec2 2,f32,f32)
 impl_Vec4Args_for!(int, vec2 2,int)
+impl_Vec4Args_for!(int, vec2 2,f32)
+impl_Vec4Args_for!(f32, vec2 2,int)
+impl_Vec4Args_for!(f32, vec2 2,f32)
 impl_Vec4Args_for!(int, int, vec2 2)
+impl_Vec4Args_for!(int, f32, vec2 2)
+impl_Vec4Args_for!(f32, int, vec2 2)
+impl_Vec4Args_for!(f32, f32, vec2 2)
 impl_Vec4Args_for!(vec2 2,vec2 2)
 impl_Vec4Args_for!(int, vec3 3)
+impl_Vec4Args_for!(f32, vec3 3)
 impl_Vec4Args_for!(vec3 3, int)
+impl_Vec4Args_for!(vec3 3, f32)
 impl_Vec4Args_for!(vec4 4 TVec4)
 
 impl<T:Neg<T>> Neg<TVec4<T>> for TVec4<T> {
@@ -1255,6 +1308,8 @@ mod vec4_tests {
     use super::{vec2,vec3,vec4};
     use super::S;
     use super::{AddAssign,SubAssign,MulAssign,DivAssign};
+    use super::{Increment,Decrement};
+    use super::{Swizzle2,Swizzle3,Swizzle4};
 
     #[test]
     fn test_ctor() {
@@ -1346,6 +1401,42 @@ mod vec4_tests {
 
         let mut A = vec4((1f32, 2f32, 3f32, 4f32));
         let B = A.predecrement();
-        assert_eq!(B, vec4(0f32, 1f32, 2f32, 3f32));
+        assert_eq!(*B, vec4((0f32, 1f32, 2f32, 3f32)));
+
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = A.postdecrement();
+        assert_eq!(B, vec4((1f32, 2f32, 3f32, 4f32)));
+        assert_eq!(A, vec4((0f32, 1f32, 2f32, 3f32)));
+
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = A.preincrement();
+        assert_eq!(*B, vec4((2f32, 3f32, 4f32, 5f32)));
+
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = A.postincrement();
+        assert_eq!(B, vec4((1f32, 2f32, 3f32, 4f32)));
+        assert_eq!(A, vec4((2f32, 3f32, 4f32, 5f32)));
+    }
+
+    #[test]
+    fn test_swizzle_partial() {
+        let A = vec4((1, 2, 3, 4));
+        let B = vec4((A.xy(), A.zw()));
+        assert_eq!(A, B);
+
+        let B = vec4((A.xy(), 3f32, 4f32));
+        assert_eq!(A, B);
+
+        let B = vec4((1f32, A.yz(), 4f32));
+        assert_eq!(A, B);
+
+        let B = vec4((1f32, 2f32, A.zw()));
+        assert_eq!(A, B);
+
+        let B = vec4((A.xyz(), 4f32));
+        assert_eq!(A, B);
+
+        let B = vec4((1f32, A.yzw()));
+        assert_eq!(A, B);
     }
 }
