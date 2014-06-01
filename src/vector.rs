@@ -1,5 +1,5 @@
 use super::typedefs::{vec1,vec2,vec3,vec4};
-use super::typedefs::{ivec1,ivec2,ivec3};
+use super::typedefs::{ivec1,ivec2,ivec3,ivec4};
 
 /// Scalar value of type T.  (New type wrapper to ease operator overloading.)
 pub struct S<T>(pub T);
@@ -322,13 +322,13 @@ swizzle_def!{
     }
 }
 
-#[deriving(Eq, Show)]
+#[deriving(Eq, Show, Default)]
 pub struct TVec1<T> { x: T, }
-#[deriving(Eq, Show)]
+#[deriving(Eq, Show, Default)]
 pub struct TVec2<T> { x: T, y: T, }
-#[deriving(Eq, Show)]
+#[deriving(Eq, Show, Default)]
 pub struct TVec3<T> { x: T, y: T, z: T, }
-#[deriving(Eq, Show)]
+#[deriving(Eq, Show, Default)]
 pub struct TVec4<T> { x: T, y: T, z: T, w: T, }
 
 impl<T:Clone> Swizzle1<T> for TVec2<T> { fn x(&self) -> T { self.x.clone() } }
@@ -364,6 +364,13 @@ pub fn ivec3<Args:IVec3Args>(args: Args) -> ivec3 { args.make() }
 
 impl IVec3Args for i32 { fn make(self) -> ivec3 { TVec3 { x: self, y: self, z: self } } }
 impl IVec3Args for TVec3<i32> { fn make(self) -> ivec3 { TVec3 { x: self.x, y: self.y, z: self.z } } }
+
+pub trait IVec4Args { fn make(self) -> ivec4; }
+pub fn ivec4<Args:IVec4Args>(args: Args) -> ivec4 { args.make() }
+
+impl IVec4Args for i32 { fn make(self) -> ivec4 { TVec4 { x: self, y: self, z: self, w: self } } }
+impl IVec4Args for TVec4<i32> { fn make(self) -> ivec4 { TVec4 { x: self.x, y: self.y, z: self.z, w: self.w } } }
+
 
 macro_rules! impl_IncrementDecrement_for {
     ($TVec:ident $($x:ident),*) => {
@@ -1306,10 +1313,13 @@ mod vec4_tests {
     #![allow(uppercase_variables)]
 
     use super::{vec2,vec3,vec4};
+    use super::ivec4;
     use super::S;
     use super::{AddAssign,SubAssign,MulAssign,DivAssign};
     use super::{Increment,Decrement};
     use super::{Swizzle2,Swizzle3,Swizzle4};
+
+    use test::Bencher;
 
     #[test]
     fn test_ctor() {
@@ -1438,5 +1448,41 @@ mod vec4_tests {
 
         let B = vec4((1f32, A.yzw()));
         assert_eq!(A, B);
+    }
+
+    #[test]
+    fn test_operator_increment() {
+        let v0 = ivec4(1i32);
+        let mut v1 = ivec4(v0);
+        let mut v2 = ivec4(v0);
+        let v3 = v1.preincrement();
+        let v4 = v2.postincrement();
+        let v1 = v1;
+
+        assert_eq!(v0, v4);
+        assert_eq!(v1, v2);
+        assert_eq!(v1, *v3);
+    }
+
+
+    static Size: uint = 1000;
+
+    #[bench]
+    fn bench_perf_AoS(b: &mut Bencher) {
+        use std::default::Default;
+        use src::typedefs::{vec2,vec3,vec4};
+        #[deriving(Default)]
+        struct AoS { A: vec4, B: vec3, C: vec3, D: vec2 }
+        let mut In = Vec::<AoS>::new();
+        let mut Out = Vec::<AoS>::new();
+        for _ in range(0, Size) {
+            In.push(Default::default());
+            Out.push(Default::default());
+        }
+        b.iter(|| {
+            for i in range(0u, Size) {
+                *Out.get_mut(i) = *In.get(i);
+            }
+        })
     }
 }
