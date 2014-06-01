@@ -20,6 +20,8 @@ pub use src::typedefs::{mat3x2,mat3x3,mat3x4};
 pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
 
 pub use src::vector::vec2;
+pub use src::matrix::{mat2x2,mat2};
+pub use src::matrix::inverse;
 
 macro_rules! double_dispatch_T {
     ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
