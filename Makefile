@@ -25,10 +25,10 @@ $(LIBDIR):
 	mkdir -p $@
 
 run-tests: $(BINDIR)/tests
-	./$<
+	./$< --test
 
 bench-tests: $(BINDIR)/tests
-	./$< --bench
+	RUST_TEST_TASKS=1 ./$< --bench
 
 $(BINDIR)/tests: $(LIB_RS) $(ALL_SRC_RS) Makefile | $(BINDIR)
 	$(RUSTC) -o $@ --test $(RUSTFLAGS) $<
