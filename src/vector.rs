@@ -1248,6 +1248,7 @@ mod vec4_tests {
 
     use super::{vec2,vec3,vec4};
     use super::S;
+    use super::{AddAssign,SubAssign,MulAssign,DivAssign};
 
     #[test]
     fn test_ctor() {
@@ -1302,5 +1303,35 @@ mod vec4_tests {
         assert_eq!(M, vec4((2, 4, 6, 8)));
         let N = S(2f32) / B;
         assert_eq!(N, vec4((0.5f32, 2f32 / 5f32, 2f32 / 6f32, 2f32 / 7f32)));
+
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        A.add_assign(&B);
+        assert_eq!(A, vec4((5, 7, 9, 11)));
+        A.add_assign(&1f32);
+        assert_eq!(A, vec4((6, 8, 10, 12)));
+        let A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut B = vec4((4f32, 5f32, 6f32, 7f32));
+        B.sub_assign(&A);
+        assert_eq!(B, vec4((3, 3, 3, 3)));
+        B.sub_assign(&1f32);
+        assert_eq!(B, vec4((2, 2, 2, 2)));
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        A.mul_assign(&B);
+        assert_eq!(A, vec4((4, 10, 18, 28)));
+        A.mul_assign(&2f32);
+        assert_eq!(A, vec4((8, 20, 36, 56)));
+        let A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut B = vec4((4f32, 5f32, 6f32, 7f32));
+        B.div_assign(&A);
+        assert_eq!(B, vec4((4f32, 2.5f32, 2f32, 7f32 / 4f32)));
+        B.div_assign(&2f32);
+        assert_eq!(B, vec4((2f32, 1.25f32, 1f32, 7f32 / 4f32 / 2f32)));
+
+        let mut B = vec4(2f32);
+        let B_y = B.y;
+        B.div_assign(&B_y);
+        assert_eq!(B, vec4(1f32));
     }
 }
