@@ -1,4 +1,4 @@
-pub use src::typedefs::{vec2,vec3};
+pub use src::typedefs::{vec2,vec3,vec4};
 pub use src::typedefs::{mat2x2,mat2x3,mat2x4};
 pub use src::typedefs::{mat3x2,mat3x3,mat3x4};
 pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
@@ -189,34 +189,56 @@ impl<T:Num> Invertible for TMat2<T> {
     }
 }
 
-impl<T:fmt::Show> fmt::Show for TMat2<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "["));
-        try!(self.elems[0].as_slice().fmt(f));
-        try!(write!(f, "\n "));
-        write!(f, "]")
+macro_rules! impl_Show_for {
+    ($TMat:ident $ncols:expr $nrows:expr) =>
+    {
+        impl<T:fmt::Show> fmt::Show for $TMat<T> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                try!(write!(f, "["));
+                for u in range(0u, $ncols-1) {
+                    try!(self.elems[u].as_slice().fmt(f));
+                    try!(write!(f, "\n "));
+                }
+                try!(self.elems[$ncols-1].as_slice().fmt(f));
+                write!(f, "]")
+            }
+        }
     }
 }
 
-impl<T:fmt::Show> fmt::Show for TMat2x3<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "["));
-        try!(self.elems[0].as_slice().fmt(f));
-        try!(write!(f, "\n "));
-        write!(f, "]")
+macro_rules! impl_Eq_for {
+    ($TMat:ident $ncols:expr $nrows:expr) =>
+    {
+        impl<T:Eq> Eq for $TMat<T> {
+            fn eq(&self, rhs: &$TMat<T>) -> bool {
+                for u in range(0u, $ncols) {
+                    if self.elems[u] != rhs.elems[u] {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
     }
 }
 
-impl<T:Eq> Eq for TMat2<T> {
-    fn eq(&self, rhs: &TMat2<T>) -> bool {
-        self.elems[0] == rhs.elems[0] && self.elems[1] == rhs.elems[1]
+macro_rules! easy_impls_for {
+    ($TMat:ident $ncols:expr $nrows:expr) =>
+    {
+        impl_Show_for!($TMat $ncols $nrows)
+        impl_Eq_for!($TMat $ncols $nrows)
     }
 }
-impl<T:Eq> Eq for TMat2x3<T> {
-    fn eq(&self, rhs: &TMat2x3<T>) -> bool {
-        self.elems[0] == rhs.elems[0] && self.elems[1] == rhs.elems[1]
-    }
-}
+
+easy_impls_for!(TMat2   2 2)
+easy_impls_for!(TMat2x3 2 3)
+easy_impls_for!(TMat2x4 2 4)
+easy_impls_for!(TMat3   3 3)
+easy_impls_for!(TMat3x2 3 2)
+easy_impls_for!(TMat3x4 3 4)
+easy_impls_for!(TMat4   4 4)
+easy_impls_for!(TMat4x2 4 2)
+easy_impls_for!(TMat4x3 4 3)
 
 impl<T,U> Mappable<T,U,TMat2<U>> for TMat2<T> {
     fn map(&self, f: |&T| -> U) -> TMat2<U> {
@@ -227,7 +249,14 @@ impl<T,U> Mappable<T,U,TMat2<U>> for TMat2<T> {
 impl<T,U> Mappable<T,U,TMat2x3<U>> for TMat2x3<T> {
     fn map(&self, f: |&T| -> U) -> TMat2x3<U> {
         TMat2x3 { elems: [[f(&self.elems[0][0]), f(&self.elems[0][1]), f(&self.elems[0][2])],
-                        [f(&self.elems[1][0]), f(&self.elems[1][1]), f(&self.elems[1][2])]] }
+                          [f(&self.elems[1][0]), f(&self.elems[1][1]), f(&self.elems[1][2])]] }
+    }
+}
+
+impl<T,U> Mappable<T,U,TMat2x4<U>> for TMat2x4<T> {
+    fn map(&self, f: |&T| -> U) -> TMat2x4<U> {
+        TMat2x4 { elems: [[f(&self.elems[0][0]), f(&self.elems[0][1]), f(&self.elems[0][2]), f(&self.elems[0][3])],
+                          [f(&self.elems[1][0]), f(&self.elems[1][1]), f(&self.elems[1][2]), f(&self.elems[1][3])]] }
     }
 }
 
@@ -263,8 +292,7 @@ macro_rules! impl_Mat2x2Args_for {
                                 [x as f32,x as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident,$b:ident,$c:ident,$d:ident) => {
         impl Mat2x2Args for ($a,$b,$c,$d) {
             fn make(self) -> mat2x2 {
@@ -294,8 +322,7 @@ macro_rules! impl_Mat2x2Args_for {
                                 [c as f32,d as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident 2,$b:ident,$c:ident) => {
         impl Mat2x2Args for ($a,$b,$c) {
             fn make(self) -> mat2x2 {
@@ -311,8 +338,7 @@ macro_rules! impl_Mat2x2Args_for {
                                 [b as f32,  c as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident,$b:ident,$c:ident 2) => {
         impl Mat2x2Args for ($a,$b,$c) {
             fn make(self) -> mat2x2 {
@@ -328,8 +354,7 @@ macro_rules! impl_Mat2x2Args_for {
                                 [c.x as f32,c.y as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident 2,$b:ident 2) => {
         impl Mat2x2Args for ($a,$b) {
             fn make(self) -> mat2x2 {
@@ -338,8 +363,7 @@ macro_rules! impl_Mat2x2Args_for {
                                 [b.x as f32,b.y as f32]] }
             }
         }
-    }
-    ;
+    };
 }
 
 macro_rules! impl_Mat2x3Args_for {
@@ -351,8 +375,7 @@ macro_rules! impl_Mat2x3Args_for {
                                   [x as f32,x as f32,x as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident,$b:ident,$c:ident,
      $d:ident,$e:ident,$f:ident) => {
         impl Mat2x3Args for ($a,$b,$c,
@@ -445,7 +468,7 @@ macro_rules! impl_Mat2x3Args_for {
 
 
 impl_Mat2x2Args_for!(f32 copy)
-impl_Mat2x3Args_for!(f32 copy)
+impl_Mat2x2Args_for!(int copy)
 
 macro_rules! impl_Mat2x2Args_for_choice {
     ( $a:ident, $b:ident, $c:ident, $d:ident, $($ignore:ident),*) => {
@@ -472,6 +495,8 @@ all_choices!( impl_Mat2x3Args_for_choice :
                       (int | f32) (int | f32) (int | f32) }
               done: { (ignored) } )
 
+impl_Mat2x3Args_for!(f32 copy)
+impl_Mat2x3Args_for!(int copy)
 
 impl_Mat2x3Args_for!(vec3 3,vec3 3)
 impl_Mat2x3Args_for!(vec3 3,f32,f32,f32)
@@ -490,6 +515,128 @@ impl_Mat2x3Args_for!(int,f32,f32,vec3 3)
 impl_Mat2x3Args_for!(int,f32,int,vec3 3)
 impl_Mat2x3Args_for!(int,int,f32,vec3 3)
 impl_Mat2x3Args_for!(int,int,int,vec3 3)
+
+macro_rules! impl_Mat2x4Args_for {
+    ($a:ident copy) => {
+        impl Mat2x4Args for $a {
+            fn make(self) -> mat2x4 {
+                let x = self;
+                TMat2x4 { elems: [[x as f32,x as f32,x as f32,x as f32],
+                                  [x as f32,x as f32,x as f32,x as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,$c:ident,$d:ident,
+     $e:ident,$f:ident,$g:ident,$h:ident) => {
+        impl Mat2x4Args for ($a,$b,$c,$d,
+                             $e,$f,$g,$h) {
+            fn make(self) -> mat2x4 {
+                let (a,b,c,d,
+                     e,f,g,h) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+        impl Mat2x4Args for (($a,$b,$c,$d),
+                             $e,$f,$g,$h) {
+            fn make(self) -> mat2x4 {
+                let ((a,b,c,d),
+                     e,f,g,h) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+        impl Mat2x4Args for ($a,$b,$c,$d,
+                             ($e,$f,$g,$h)) {
+            fn make(self) -> mat2x4 {
+                let (a,b,c,d,
+                     (e,f,g,h)) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+        impl Mat2x4Args for (($a,$b,$c,$d),
+                             ($e,$f,$g,$h)) {
+            fn make(self) -> mat2x4 {
+                let ((a,b,c,d),
+                     (e,f,g,h)) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+    };
+    ($a:ident 4,
+     $e:ident,$f:ident,$g:ident,$h:ident) => {
+        impl Mat2x4Args for ($a,
+                             $e,$f,$g,$h) {
+            fn make(self) -> mat2x4 {
+                let (a,
+                     e,f,g,h) = self;
+                TMat2x4 { elems: [[a.x as f32,a.y as f32,a.z as f32,a.w as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+        impl Mat2x4Args for ($a,
+                             ($e,$f,$g,$h)) {
+            fn make(self) -> mat2x4 {
+                let (a,
+                     (e,f,g,h)) = self;
+                TMat2x4 { elems: [[a.x as f32,a.y as f32,a.z as f32,a.w as f32],
+                                  [e as f32,f as f32,g as f32,h as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,$c:ident,$d:ident,
+     $e:ident 4) => {
+        impl Mat2x4Args for ($a,$b,$c,$d,
+                             $e) {
+            fn make(self) -> mat2x4 {
+                let (a,b,c,d,
+                     e) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e.x as f32,e.y as f32,e.z as f32,e.w as f32]] }
+            }
+        }
+        impl Mat2x4Args for (($a,$b,$c,$d),
+                             $e) {
+            fn make(self) -> mat2x4 {
+                let ((a,b,c,d),
+                     e) = self;
+                TMat2x4 { elems: [[a as f32,b as f32,c as f32,d as f32],
+                                  [e.x as f32,e.y as f32,e.z as f32,e.w as f32]] }
+            }
+        }
+    };
+    ($a:ident 4,
+     $e:ident 4) => {
+        impl Mat2x4Args for ($a,
+                             $e) {
+            fn make(self) -> mat2x4 {
+                let (a,
+                     e) = self;
+                TMat2x4 { elems: [[a.x as f32,a.y as f32,a.z as f32,a.w as f32],
+                                  [e.x as f32,e.y as f32,e.z as f32,e.w as f32]] }
+            }
+        }
+    };
+}
+
+macro_rules! impl_Mat2x4Args_for_choice {
+    ( $a:ident, $b:ident, $c:ident, $d:ident,
+      $e:ident, $f:ident, $g:ident, $h:ident, $($ignore:ident),*) => {
+        impl_Mat2x4Args_for!($a, $b, $c, $d, $e, $f, $g, $h)
+    }
+}
+
+impl_Mat2x4Args_for!(f32 copy)
+impl_Mat2x4Args_for!(int copy)
+
+all_choices!(impl_Mat2x4Args_for_choice :
+             todo: {  (int | f32) (int | f32) (int | f32) (int | f32)
+                      (int | f32) (int | f32) (int | f32) (int | f32) }
+             done: { (ignored) } )
+
+impl_Mat2x4Args_for!(vec4 4,vec4 4)
 
 double_dispatch_T!{Mul for TMat2   mul via TMat2x2MulRHS rev_mul}
 double_dispatch_T!{Div for TMat2   div via TMat2x2DivRHS rev_div}
@@ -524,7 +671,7 @@ impl<T:Num> TMat2x2MulRHS<T,TMat2<T>> for TMat2<T> {
     }
 }
 
-impl<T:Num> TMat2x3MulRHS<T,TMat2<T>> for TMat2x3<T> {
+impl<T:Num> TMat2x3MulRHS<T,TMat2<T>> for TMat3x2<T> {
     fn rev_mul(&self, lhs: &TMat2x3<T>) -> TMat2<T> {
         let l = &lhs.elems;
         let r = &self.elems;
@@ -641,6 +788,53 @@ impl<T:Num> SDivRHS<T,TMat2x3<T>> for TMat2x3<T> {
     }
 }
 
+impl<T:Num> TMat2x4MulRHS<T,TVec4<T>> for TVec2<T> {
+    fn rev_mul(&self, lhs: &TMat2x4<T>) -> TVec4<T> {
+        TVec4 { x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
+                y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y,
+                z: lhs.elems[0][2] * self.x + lhs.elems[1][2] * self.y,
+                w: lhs.elems[0][3] * self.x + lhs.elems[1][3] * self.y, }
+    }
+}
+
+impl<T:Num> TVec4MulRHS<T,TVec2<T>> for TMat2x4<T> {
+    fn rev_mul(&self, lhs: &TVec4<T>) -> TVec2<T> {
+        TVec2 { x: (lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1] +
+                    lhs.z * self.elems[0][2] + lhs.w * self.elems[0][3]),
+                y: (lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1] +
+                    lhs.z * self.elems[1][2] + lhs.w * self.elems[1][3]),
+        }
+    }
+}
+
+impl<T:Num> SMulRHS<T,TMat2x4<T>> for TMat2x4<T> {
+    fn rev_mul(&self, lhs: &S<T>) -> TMat2x4<T> {
+        let &S(ref f) = lhs;
+        self.map(|x|*f * *x)
+    }
+}
+
+impl<T:Num> SDivRHS<T,TMat2x4<T>> for TMat2x4<T> {
+    fn rev_div(&self, lhs: &S<T>) -> TMat2x4<T> {
+        let &S(ref f) = lhs;
+        self.map(|x|*f / *x)
+    }
+}
+
+impl<T:Num> TMat2x4MulRHS<T,TMat2x4<T>> for S<T> {
+    fn rev_mul(&self, lhs: &TMat2x4<T>) -> TMat2x4<T> {
+        let &S(ref f) = self;
+        lhs.map(|x|*x * *f)
+    }
+}
+
+impl<T:Num> TMat2x4DivRHS<T,TMat2x4<T>> for S<T> {
+    fn rev_div(&self, lhs: &TMat2x4<T>) -> TMat2x4<T> {
+        let &S(ref f) = self;
+        lhs.map(|x|*x / *f)
+    }
+}
+
 #[cfg(test)]
 mod mat2x2_tests {
     #![allow(uppercase_variables)]
@@ -744,6 +938,46 @@ mod mat2x3_tests {
                          3, 4, 5));
         let m2 = mat2x3(((0, 1, 2),
                          (3, 4, 5)));
+        assert_eq!(m0, m2);
+        assert_eq!(m1, m2);
+    }
+}
+
+#[cfg(test)]
+mod mat2x4_tests {
+    use super::{mat2x4};
+
+    use src::scalar::S;
+    use src::typedefs::{vec2,vec4};
+    use src::vector::{vec2,vec4};
+
+    #[test]
+    fn test_operators() {
+        let l = mat2x4(1.0f32);
+        let m = mat2x4(1.0f32);
+        let u = vec2(1.0f32);
+        let v = vec4(1.0f32);
+        let x = S(1.0f32);
+        let a : vec4 = m * u;
+        let b : vec2 = v * m;
+        let n : mat2x4 = x / m;
+        let o : mat2x4 = m / x;
+        let p : mat2x4 = x * m;
+        let q : mat2x4 = m * x;
+        let _ = (a,b,n,o,p);
+        assert_eq!(m, q);
+        assert_eq!(m, l);
+    }
+
+    #[test]
+    fn test_ctr() {
+        let m0 = mat2x4((vec4((0, 1, 2, 3)),
+                         vec4((4, 5, 6, 7))));
+        let m1 = mat2x4((0, 1, 2, 3,
+                         4, 5, 6, 7));
+        let m2 = mat2x4(((0, 1, 2, 3),
+                         (4, 5, 6, 7)));
+
         assert_eq!(m0, m2);
         assert_eq!(m1, m2);
     }
