@@ -845,6 +845,12 @@ impl_Vec4Args_for!(int, vec3 3)
 impl_Vec4Args_for!(vec3 3, int)
 impl_Vec4Args_for!(vec4 4 TVec4)
 
+impl<T:Neg<T>> Neg<TVec4<T>> for TVec4<T> {
+    fn neg(&self) -> TVec4<T> {
+        TVec4 { x: -self.x, y: -self.y, z: -self.z, w: -self.w }
+    }
+}
+
 impl<T:Num> DotProduct<T> for TVec4<T> {
     fn dot(&self, rhs: &TVec4<T>) -> T {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
@@ -1333,5 +1339,13 @@ mod vec4_tests {
         let B_y = B.y;
         B.div_assign(&B_y);
         assert_eq!(B, vec4(1f32));
+
+        let A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = -A;
+        assert_eq!(B, vec4((-1f32, -2f32, -3f32, -4f32)));
+
+        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let B = A.predecrement();
+        assert_eq!(B, vec4(0f32, 1f32, 2f32, 3f32));
     }
 }
