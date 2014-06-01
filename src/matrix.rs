@@ -5,11 +5,17 @@ pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
 
 use src::vector::{TVec2,TVec2MulRHS};
 use src::vector::{TVec3,TVec3MulRHS};
+use src::vector::{TVec4,TVec4MulRHS};
 use src::scalar::{S,SMulRHS,SDivRHS};
 use std::fmt;
 
-trait Matrix<RowVec,ColVec> {
+trait Columns<ColVec> {
+    fn num_cols(&self) -> uint;
     fn col(&self, i: uint) -> ColVec;
+}
+
+trait Rows<RowVec> {
+    fn num_rows(&self) -> uint;
     fn row(&self, j: uint) -> RowVec;
 }
 
@@ -24,6 +30,14 @@ trait Mappable<T,U,SelfU> {
 }
 
 pub fn inverse<M:Invertible>(m: &M) -> M { m.inverse() }
+
+// All the matrix representations use column-major order:
+// namely, [[a, b, c], [d, e, f]]
+// should be read as corresponding to the 2 x 3 matrix:
+//
+// ( a d |
+// | b e |
+// | c f )
 
 pub struct TMat2<T> {
     elems: [[T, ..2], ..2]
@@ -55,16 +69,113 @@ pub struct TMat4x3<T> {
     elems: [[T, ..3], ..4]
 }
 
-impl<T:Clone> Matrix<TVec2<T>,TVec2<T>> for TMat2<T> {
-    fn col(&self, i: uint) -> TVec2<T> {
-        assert!(i <= 1);
-        TVec2 { x: self.elems[0][i].clone(), y: self.elems[1][i].clone() }
-    }
-    fn row(&self, j: uint) -> TVec2<T> {
-        assert!(j <= 1);
-        TVec2 { x: self.elems[j][0].clone(), y: self.elems[j][1].clone() }
+macro_rules! tvec_of_len {
+    ($T:ident, 2) => { TVec2<$T> };
+    ($T:ident, 3) => { TVec3<$T> };
+    ($T:ident, 4) => { TVec4<$T> };
+}
+
+macro_rules! impl_Columns_for {
+    ( $TMat:ident $ncols:expr 2 ) =>
+    {
+        impl<T:Clone> Columns<TVec2<T>> for $TMat<T> {
+            fn num_cols(&self) -> uint { $ncols }
+            fn col(&self, i: uint) -> TVec2<T> {
+                assert!(i < $ncols);
+                TVec2 { x: self.elems[i][0].clone(),
+                        y: self.elems[i][1].clone(),
+                }
+            }
+        }
+    };
+    ( $TMat:ident $ncols:expr 3 ) =>
+    {
+        impl<T:Clone> Columns<TVec3<T>> for $TMat<T> {
+            fn num_cols(&self) -> uint { $ncols }
+            fn col(&self, i: uint) -> TVec3<T> {
+                assert!(i < $ncols);
+                TVec3 { x: self.elems[i][0].clone(),
+                        y: self.elems[i][1].clone(),
+                        z: self.elems[i][2].clone(),
+                }
+            }
+        }
+    };
+    ( $TMat:ident $ncols:expr 4 ) =>
+    {
+        impl<T:Clone> Columns<TVec4<T>> for $TMat<T> {
+            fn num_cols(&self) -> uint { $ncols }
+            fn col(&self, i: uint) -> TVec4<T> {
+                assert!(i < $ncols);
+                TVec4 { x: self.elems[i][0].clone(),
+                        y: self.elems[i][1].clone(),
+                        z: self.elems[i][2].clone(),
+                        w: self.elems[i][3].clone(),
+                }
+            }
+        }
+    };
+}
+
+macro_rules! impl_Rows_for {
+    ( $TMat:ident 2 $nrows:expr ) =>
+    {
+        impl<T:Clone> Rows<TVec2<T>> for $TMat<T> {
+            fn num_rows(&self) -> uint { $nrows }
+            fn row(&self, j: uint) -> TVec2<T> {
+                assert!(j < $nrows);
+                TVec2 { x: self.elems[0][j].clone(),
+                        y: self.elems[1][j].clone(),
+                }
+            }
+        }
+    };
+    ( $TMat:ident 3 $nrows:expr ) =>
+    {
+        impl<T:Clone> Rows<TVec3<T>> for $TMat<T> {
+            fn num_rows(&self) -> uint { $nrows }
+            fn row(&self, j: uint) -> TVec3<T> {
+                assert!(j < $nrows);
+                TVec3 { x: self.elems[0][j].clone(),
+                        y: self.elems[1][j].clone(),
+                        z: self.elems[2][j].clone(),
+                }
+            }
+        }
+    };
+    ( $TMat:ident 4 $nrows:expr ) =>
+    {
+        impl<T:Clone> Rows<TVec4<T>> for $TMat<T> {
+            fn num_rows(&self) -> uint { $nrows }
+            fn row(&self, j: uint) -> TVec4<T> {
+                assert!(j < $nrows);
+                TVec4 { x: self.elems[0][j].clone(),
+                        y: self.elems[1][j].clone(),
+                        z: self.elems[2][j].clone(),
+                        w: self.elems[3][j].clone(),
+                }
+            }
+        }
+    };
+}
+
+macro_rules! impl_ColRow_for {
+    ( $TMat:ident $ncols:tt $nrows:tt ) =>
+    {
+        impl_Columns_for!    ($TMat $ncols $nrows)
+        impl_Rows_for!       ($TMat $ncols $nrows)
     }
 }
+
+impl_ColRow_for!(TMat2   2 2)
+impl_ColRow_for!(TMat2x3 2 3)
+impl_ColRow_for!(TMat2x4 2 4)
+impl_ColRow_for!(TMat3   3 3)
+impl_ColRow_for!(TMat3x2 3 2)
+impl_ColRow_for!(TMat3x4 3 4)
+impl_ColRow_for!(TMat4   4 4)
+impl_ColRow_for!(TMat4x2 4 2)
+impl_ColRow_for!(TMat4x3 4 3)
 
 impl<T:Num> Invertible for TMat2<T> {
     fn inverse(&self) -> TMat2<T> {
@@ -336,88 +447,32 @@ macro_rules! impl_Mat2x3Args_for {
 impl_Mat2x2Args_for!(f32 copy)
 impl_Mat2x3Args_for!(f32 copy)
 
-impl_Mat2x2Args_for!(int,int,int,int)
-impl_Mat2x2Args_for!(int,int,int,f32)
-impl_Mat2x2Args_for!(int,int,f32,int)
-impl_Mat2x2Args_for!(int,int,f32,f32)
-impl_Mat2x2Args_for!(int,f32,int,int)
-impl_Mat2x2Args_for!(int,f32,int,f32)
-impl_Mat2x2Args_for!(int,f32,f32,int)
-impl_Mat2x2Args_for!(int,f32,f32,f32)
-impl_Mat2x2Args_for!(f32,int,int,int)
-impl_Mat2x2Args_for!(f32,int,int,f32)
-impl_Mat2x2Args_for!(f32,int,f32,int)
-impl_Mat2x2Args_for!(f32,int,f32,f32)
-impl_Mat2x2Args_for!(f32,f32,int,int)
-impl_Mat2x2Args_for!(f32,f32,int,f32)
-impl_Mat2x2Args_for!(f32,f32,f32,int)
-impl_Mat2x2Args_for!(f32,f32,f32,f32)
+macro_rules! impl_Mat2x2Args_for_choice {
+    ( $a:ident, $b:ident, $c:ident, $d:ident, $($ignore:ident),*) => {
+        impl_Mat2x2Args_for!($a, $b, $c, $d)
+    }
+}
+
+all_choices!( impl_Mat2x2Args_for_choice :
+              todo: { (int | f32) (int | f32)
+                      (int | f32) (int | f32) }
+              done: { (ignored) } )
+
 impl_Mat2x2Args_for!(vec2 2,vec2 2)
 
-impl_Mat2x3Args_for!(f32,f32,f32,f32,f32,f32)
-impl_Mat2x3Args_for!(f32,f32,f32,f32,f32,int)
-impl_Mat2x3Args_for!(f32,f32,f32,f32,int,f32)
-impl_Mat2x3Args_for!(f32,f32,f32,f32,int,int)
-impl_Mat2x3Args_for!(f32,f32,f32,int,f32,f32)
-impl_Mat2x3Args_for!(f32,f32,f32,int,f32,int)
-impl_Mat2x3Args_for!(f32,f32,f32,int,int,f32)
-impl_Mat2x3Args_for!(f32,f32,f32,int,int,int)
-impl_Mat2x3Args_for!(f32,f32,int,f32,f32,f32)
-impl_Mat2x3Args_for!(f32,f32,int,f32,f32,int)
-impl_Mat2x3Args_for!(f32,f32,int,f32,int,f32)
-impl_Mat2x3Args_for!(f32,f32,int,f32,int,int)
-impl_Mat2x3Args_for!(f32,f32,int,int,f32,f32)
-impl_Mat2x3Args_for!(f32,f32,int,int,f32,int)
-impl_Mat2x3Args_for!(f32,f32,int,int,int,f32)
-impl_Mat2x3Args_for!(f32,f32,int,int,int,int)
-impl_Mat2x3Args_for!(f32,int,f32,f32,f32,f32)
-impl_Mat2x3Args_for!(f32,int,f32,f32,f32,int)
-impl_Mat2x3Args_for!(f32,int,f32,f32,int,f32)
-impl_Mat2x3Args_for!(f32,int,f32,f32,int,int)
-impl_Mat2x3Args_for!(f32,int,f32,int,f32,f32)
-impl_Mat2x3Args_for!(f32,int,f32,int,f32,int)
-impl_Mat2x3Args_for!(f32,int,f32,int,int,f32)
-impl_Mat2x3Args_for!(f32,int,f32,int,int,int)
-impl_Mat2x3Args_for!(f32,int,int,f32,f32,f32)
-impl_Mat2x3Args_for!(f32,int,int,f32,f32,int)
-impl_Mat2x3Args_for!(f32,int,int,f32,int,f32)
-impl_Mat2x3Args_for!(f32,int,int,f32,int,int)
-impl_Mat2x3Args_for!(f32,int,int,int,f32,f32)
-impl_Mat2x3Args_for!(f32,int,int,int,f32,int)
-impl_Mat2x3Args_for!(f32,int,int,int,int,f32)
-impl_Mat2x3Args_for!(f32,int,int,int,int,int)
-impl_Mat2x3Args_for!(int,f32,f32,f32,f32,f32)
-impl_Mat2x3Args_for!(int,f32,f32,f32,f32,int)
-impl_Mat2x3Args_for!(int,f32,f32,f32,int,f32)
-impl_Mat2x3Args_for!(int,f32,f32,f32,int,int)
-impl_Mat2x3Args_for!(int,f32,f32,int,f32,f32)
-impl_Mat2x3Args_for!(int,f32,f32,int,f32,int)
-impl_Mat2x3Args_for!(int,f32,f32,int,int,f32)
-impl_Mat2x3Args_for!(int,f32,f32,int,int,int)
-impl_Mat2x3Args_for!(int,f32,int,f32,f32,f32)
-impl_Mat2x3Args_for!(int,f32,int,f32,f32,int)
-impl_Mat2x3Args_for!(int,f32,int,f32,int,f32)
-impl_Mat2x3Args_for!(int,f32,int,f32,int,int)
-impl_Mat2x3Args_for!(int,f32,int,int,f32,f32)
-impl_Mat2x3Args_for!(int,f32,int,int,f32,int)
-impl_Mat2x3Args_for!(int,f32,int,int,int,f32)
-impl_Mat2x3Args_for!(int,f32,int,int,int,int)
-impl_Mat2x3Args_for!(int,int,f32,f32,f32,f32)
-impl_Mat2x3Args_for!(int,int,f32,f32,f32,int)
-impl_Mat2x3Args_for!(int,int,f32,f32,int,f32)
-impl_Mat2x3Args_for!(int,int,f32,f32,int,int)
-impl_Mat2x3Args_for!(int,int,f32,int,f32,f32)
-impl_Mat2x3Args_for!(int,int,f32,int,f32,int)
-impl_Mat2x3Args_for!(int,int,f32,int,int,f32)
-impl_Mat2x3Args_for!(int,int,f32,int,int,int)
-impl_Mat2x3Args_for!(int,int,int,f32,f32,f32)
-impl_Mat2x3Args_for!(int,int,int,f32,f32,int)
-impl_Mat2x3Args_for!(int,int,int,f32,int,f32)
-impl_Mat2x3Args_for!(int,int,int,f32,int,int)
-impl_Mat2x3Args_for!(int,int,int,int,f32,f32)
-impl_Mat2x3Args_for!(int,int,int,int,f32,int)
-impl_Mat2x3Args_for!(int,int,int,int,int,f32)
-impl_Mat2x3Args_for!(int,int,int,int,int,int)
+
+macro_rules! impl_Mat2x3Args_for_choice {
+    ( $a:ident, $b:ident, $c:ident, $d:ident, $e:ident, $f:ident, $($ignore:ident),*) => {
+        impl_Mat2x3Args_for!($a, $b, $c, $d, $e, $f)
+    }
+}
+
+all_choices!( impl_Mat2x3Args_for_choice :
+              todo: { (int | f32) (int | f32) (int | f32)
+                      (int | f32) (int | f32) (int | f32) }
+              done: { (ignored) } )
+
+
 impl_Mat2x3Args_for!(vec3 3,vec3 3)
 impl_Mat2x3Args_for!(vec3 3,f32,f32,f32)
 impl_Mat2x3Args_for!(vec3 3,f32,f32,int)
@@ -590,14 +645,26 @@ impl<T:Num> SDivRHS<T,TMat2x3<T>> for TMat2x3<T> {
 mod mat2x2_tests {
     #![allow(uppercase_variables)]
 
-    use super::{mat2x2,mat2};
+    use super::{mat2x2,mat2,mat2x3};
     use super::{inverse};
-    use super::{Matrix};
+    use super::{Rows,Columns};
 
     use src::operators::{EpsilonEq};
     use src::typedefs::{vec2};
-    use src::vector::{vec2};
+    use src::vector::{vec2,vec3};
     use src::scalar::S;
+
+    #[test]
+    fn basics() {
+        let m123_456 = mat2x3(((1,2,3),
+                               (4,5,6)));
+        assert_eq!(m123_456.row(0), vec2((1,4)));
+        assert_eq!(m123_456.row(1), vec2((2,5)));
+        assert_eq!(m123_456.row(2), vec2((3,6)));
+
+        assert_eq!(m123_456.col(0), vec3((1,2,3)));
+        assert_eq!(m123_456.col(1), vec3((4,5,6)));
+    }
 
     #[test]
     fn test_operators() {

@@ -608,15 +608,19 @@ macro_rules! impl_Vec3Args_for {
     }
 }
 
+macro_rules! impl_Vec3Args_for_choice {
+    ( $a:ident, $b:ident, $c:ident, $($ignore:ident),*) => {
+        impl_Vec3Args_for!($a, $b, $c)
+    }
+}
+
 impl_Vec3Args_for!(f32 copy)
 impl_Vec3Args_for!(int copy)
-impl_Vec3Args_for!(int,int,int)
-impl_Vec3Args_for!(int,int,f32)
-impl_Vec3Args_for!(int,f32,int)
-impl_Vec3Args_for!(int,f32,f32)
-impl_Vec3Args_for!(f32,int,f32)
-impl_Vec3Args_for!(f32,f32,int)
-impl_Vec3Args_for!(f32,f32,f32)
+
+all_choices!( impl_Vec3Args_for_choice :
+              todo: { (int | f32) (int | f32) (int | f32) }
+              done: { (ignored) })
+
 impl_Vec3Args_for!(vec2 2,f32)
 impl_Vec3Args_for!(vec2 2,int)
 impl_Vec3Args_for!(f32,vec2 2)
@@ -671,22 +675,17 @@ impl Vec4Args for [int, ..4] { fn make(self) -> vec4 { let v = self; TVec4 { x: 
 
 impl_Vec4Args_for!(f32 copy)
 impl_Vec4Args_for!(int copy)
-impl_Vec4Args_for!(int,int,int,int)
-impl_Vec4Args_for!(int,int,int,f32)
-impl_Vec4Args_for!(int,int,f32,int)
-impl_Vec4Args_for!(int,int,f32,f32)
-impl_Vec4Args_for!(int,f32,int,int)
-impl_Vec4Args_for!(int,f32,int,f32)
-impl_Vec4Args_for!(int,f32,f32,int)
-impl_Vec4Args_for!(int,f32,f32,f32)
-impl_Vec4Args_for!(f32,int,int,int)
-impl_Vec4Args_for!(f32,int,int,f32)
-impl_Vec4Args_for!(f32,int,f32,int)
-impl_Vec4Args_for!(f32,int,f32,f32)
-impl_Vec4Args_for!(f32,f32,int,int)
-impl_Vec4Args_for!(f32,f32,int,f32)
-impl_Vec4Args_for!(f32,f32,f32,int)
-impl_Vec4Args_for!(f32,f32,f32,f32)
+
+macro_rules! impl_Vec4Args_for_choice {
+    ( $a:ident, $b:ident, $c:ident, $d:ident, $($ignore:ident),*) => {
+        impl_Vec4Args_for!($a, $b, $c, $d)
+    }
+}
+
+all_choices!( impl_Vec4Args_for_choice :
+              todo: { (int | f32) (int | f32) (int | f32) (int | f32) }
+              done: { (ignored) } )
+
 impl_Vec4Args_for!(vec2 2,int,int)
 impl_Vec4Args_for!(vec2 2,int,f32)
 impl_Vec4Args_for!(vec2 2,f32,int)

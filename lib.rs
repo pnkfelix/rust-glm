@@ -50,6 +50,22 @@ macro_rules! double_dispatch_T {
 
 }
 
+macro_rules! all_choices {
+    ( $m:ident :
+      todo: {}
+      done: { $( ( $($i:ident),* ) )* } ) => {
+        $( $m!( $($i),* ) )*
+    };
+    ( $m:ident :
+      todo: { ($a:ident | $b:ident) $( ($p:ident | $q:ident) )* }
+      done: { $( ( $($i:ident),* ) )* } ) =>
+    {
+        all_choices!( $m :
+                      todo: { $( ( $p | $q ) )* }
+                      done: { $( ( $a, $( $i ),* ) )* $( ( $b, $( $i ),* ) )* } )
+    };
+}
+
 mod src {
     // all non-lib.rs files go into src/ subdirectory and are thus
     // listed here.
