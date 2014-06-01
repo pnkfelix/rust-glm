@@ -399,12 +399,28 @@ pub trait Vec2Args { fn make(self) -> vec2; }
 
 pub fn vec2<Args:Vec2Args>(args: Args) -> vec2 { args.make() }
 
-impl Vec2Args for f32 { fn make(self) -> vec2 { TVec2 { x: self, y: self } } }
-impl Vec2Args for (f32,f32) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x, y: y } } }
-impl Vec2Args for (int,int) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x as f32, y: y as f32 } } }
-impl Vec2Args for (int,f32) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x as f32, y: y } } }
-impl Vec2Args for (f32,int) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x, y: y as f32 } } }
-impl Vec2Args for TVec2<f32> { fn make(self) -> vec2 { self } }
+macro_rules! impl_Vec2Args_for {
+    ($a:ident,$b:ident) => {
+        impl Vec2Args for ($a,$b) { fn make(self) -> vec2 { let (x,y) = self; TVec2 { x: x as f32, y: y as f32 } } }
+    }
+    ;
+    ($a:ident 2 $S:ident) => {
+        impl Vec2Args for $a { fn make(self) -> vec2 { let $S{x:x,y:y,..} = self; TVec2 { x: x as f32, y: y as f32 } } }
+    }
+    ;
+    ($a:ident copy) => {
+        impl Vec2Args for $a { fn make(self) -> vec2 { TVec2 { x: self as f32, y: self as f32 } } }
+    }
+}
+
+impl_Vec2Args_for!(f32 copy)
+impl_Vec2Args_for!(int,int)
+impl_Vec2Args_for!(int,f32)
+impl_Vec2Args_for!(f32,int)
+impl_Vec2Args_for!(f32,f32)
+impl_Vec2Args_for!(vec2 2 TVec2)
+impl_Vec2Args_for!(vec3 2 TVec3)
+impl_Vec2Args_for!(vec4 2 TVec4)
 
 impl<T:Neg<T>> Neg<TVec2<T>> for TVec2<T> {
     fn neg(&self) -> TVec2<T> {
@@ -687,8 +703,8 @@ macro_rules! impl_Vec3Args_for {
         impl Vec3Args for ($a,$b) { fn make(self) -> vec3 { let (x,TVec2{x:y,y:z}) = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
     }
     ;
-    ($a:ident 3) => {
-        impl Vec3Args for $a { fn make(self) -> vec3 { let TVec3{x:x,y:y,z:z} = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
+    ($a:ident 3 $S:ident) => {
+        impl Vec3Args for $a { fn make(self) -> vec3 { let $S{x:x,y:y,z:z,..} = self; TVec3 { x: x as f32, y: y as f32, z: z as f32 } } }
     }
     ;
     ($a:ident copy) => {
@@ -709,7 +725,8 @@ impl_Vec3Args_for!(vec2 2,f32)
 impl_Vec3Args_for!(vec2 2,int)
 impl_Vec3Args_for!(f32,vec2 2)
 impl_Vec3Args_for!(int,vec2 2)
-impl Vec3Args for vec4 { fn make(self) -> vec3 { let v = self; TVec3 { x: v.x, y: v.y, z: v.z } } }
+impl_Vec3Args_for!(vec3 3 TVec3)
+impl_Vec3Args_for!(vec4 3 TVec4)
 impl Vec3Args for [int, ..3] { fn make(self) -> vec3 { let v = self; TVec3 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32 } } }
 
 impl<T:Neg<T>> Neg<TVec3<T>> for TVec3<T> {
@@ -790,8 +807,8 @@ macro_rules! impl_Vec4Args_for {
         impl Vec4Args for ($a,$b) { fn make(self) -> vec4 { let (x,TVec3{x:y,y:z,z:w}) = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
     }
     ;
-    ($a:ident 4) => {
-        impl Vec4Args for $a { fn make(self) -> vec4 { let TVec4{x:x,y:y,z:z,w:w} = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
+    ($a:ident 4 $S:ident) => {
+        impl Vec4Args for $a { fn make(self) -> vec4 { let $S{x:x,y:y,z:z,w:w,..} = self; TVec4 { x: x as f32, y: y as f32, z: z as f32, w: w as f32 } } }
     }
     ;
     ($a:ident copy) => {
@@ -826,7 +843,7 @@ impl_Vec4Args_for!(int, int, vec2 2)
 impl_Vec4Args_for!(vec2 2,vec2 2)
 impl_Vec4Args_for!(int, vec3 3)
 impl_Vec4Args_for!(vec3 3, int)
-impl_Vec4Args_for!(vec4 4)
+impl_Vec4Args_for!(vec4 4 TVec4)
 
 impl<T:Num> DotProduct<T> for TVec4<T> {
     fn dot(&self, rhs: &TVec4<T>) -> T {
