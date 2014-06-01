@@ -1,6 +1,7 @@
 use super::typedefs::{vec1,vec2,vec3,vec4};
 use super::typedefs::{ivec1,ivec2,ivec3,ivec4};
 use src::scalar::{S,SAddRHS,SSubRHS,SMulRHS,SDivRHS};
+use src::operators::{EpsilonEq};
 use src::operators::{Increment,Decrement};
 use src::operators::{AddAssign,SubAssign,MulAssign,DivAssign};
 
@@ -239,13 +240,13 @@ swizzle_def!{
 }
 
 #[deriving(Eq, Show, Default)]
-pub struct TVec1<T> { x: T, }
+pub struct TVec1<T> { pub x: T, }
 #[deriving(Eq, Show, Default)]
-pub struct TVec2<T> { x: T, y: T, }
+pub struct TVec2<T> { pub x: T, pub y: T, }
 #[deriving(Eq, Show, Default)]
-pub struct TVec3<T> { x: T, y: T, z: T, }
+pub struct TVec3<T> { pub x: T, pub y: T, pub z: T, }
 #[deriving(Eq, Show, Default)]
-pub struct TVec4<T> { x: T, y: T, z: T, w: T, }
+pub struct TVec4<T> { pub x: T, pub y: T, pub z: T, pub w: T, }
 
 impl<T:Clone> Swizzle1<T> for TVec2<T> { fn x(&self) -> T { self.x.clone() } }
 impl<T:Clone> Swizzle2<T> for TVec2<T> { fn y(&self) -> T { self.y.clone() } }
@@ -709,6 +710,24 @@ macro_rules! vec1 { ($($arg:expr),*) => { vec1(($($arg),*)) } }
 macro_rules! vec2 { ($($arg:expr),*) => { vec2(($($arg),*)) } }
 macro_rules! vec3 { ($($arg:expr),*) => { vec3(($($arg),*)) } }
 macro_rules! vec4 { ($($arg:expr),*) => { vec4(($($arg),*)) } }
+
+macro_rules! impl_EpsilonEq_for {
+    ($TVec:ident $($x:ident),*) => {
+        impl<T:Num+Ord> EpsilonEq<$TVec<T>> for $TVec<T> {
+            fn epsilon_eq(&self, rhs: &$TVec<T>, epsilons: &$TVec<T>) -> bool {
+                let mut result = true;
+                { $( result = result && ((self.$x - rhs.$x) < epsilons.$x); )* }
+                return result;
+            }
+        }
+    }
+}
+
+impl_EpsilonEq_for!(TVec1 x)
+impl_EpsilonEq_for!(TVec2 x, y)
+impl_EpsilonEq_for!(TVec3 x, y, z)
+impl_EpsilonEq_for!(TVec4 x, y, z, w)
+
 
 #[cfg(test)]
 mod vec1_tests {

@@ -1,3 +1,7 @@
+pub trait EpsilonEq<Epsilons> {
+    fn epsilon_eq(&self, rhs: &Self, epsilon: &Epsilons) -> bool;
+}
+
 pub trait Increment {
     fn postincrement(&mut self) -> Self;
     fn preincrement<'a>(&'a mut self) -> &'a mut Self;
