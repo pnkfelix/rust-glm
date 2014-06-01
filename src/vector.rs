@@ -814,6 +814,11 @@ impl_Vec4Args_for!(vec3 3, int)
 impl_Vec4Args_for!(vec3 3, f32)
 impl_Vec4Args_for!(vec4 4 TVec4)
 
+macro_rules! vec1 { ($($arg:expr),*) => { vec1(($($arg),*)) } }
+macro_rules! vec2 { ($($arg:expr),*) => { vec2(($($arg),*)) } }
+macro_rules! vec3 { ($($arg:expr),*) => { vec3(($($arg),*)) } }
+macro_rules! vec4 { ($($arg:expr),*) => { vec4(($($arg),*)) } }
+
 #[cfg(test)]
 mod vec1_tests {
     #![allow(uppercase_variables)]
@@ -823,8 +828,8 @@ mod vec1_tests {
 
     #[test]
     fn test_operators() {
-        let A = vec1(1.0f32);
-        let B = vec1(2.0f32);
+        let A = vec1!(1.0f32);
+        let B = vec1!(2.0f32);
         assert!(A != B);
     }
 
@@ -854,161 +859,161 @@ mod vec2_tests {
 
     #[test]
     fn test_operators() {
-        let A = vec2(1.0f32);
-        let B = vec2(1.0f32);
+        let A = vec2!(1.0f32);
+        let B = vec2!(1.0f32);
         assert!(A == B);
 
-        let A = vec2(1.0f32);
+        let A = vec2!(1.0f32);
         let C = A + 1.0f32;
         let mut A = A;
         A.add_assign(&1.0f32);
         assert!(A.x == 2.0 && A.y == 2.0);
         assert!(A == C);
 
-        let A = vec2(1.0f32);
-        let B = vec2((2.0f32, -1.0f32));
+        let A = vec2!(1.0f32);
+        let B = vec2!(2.0f32, -1.0f32);
         let C = A + B;
         let mut A = A;
         A.add_assign(&B);
         assert!(A.x == 3.0 && A.y == 0.0);
         assert!(A == C);
 
-        let A = vec2(1.0f32);
+        let A = vec2!(1.0f32);
         let C = A - 1.0f32;
         let mut A = A;
         A.sub_assign(&1.0f32);
         assert!(A.x == 0.0 && A.y == 0.0);
         assert!(A == C);
 
-        let A = vec2(1.0f32);
+        let A = vec2!(1.0f32);
         let C = A * 2.0f32;
         let mut A = A;
         A.mul_assign(&2.0f32);
         assert!(A.x == 2.0 && A.y == 2.0);
         assert!(A == C);
 
-        let A = vec2(2.0f32);
-        let B = vec2(2.0f32);
+        let A = vec2!(2.0f32);
+        let B = vec2!(2.0f32);
         let C = A / B;
         let mut A = A;
         A.div_assign(&B);
         assert!(A.x == 1.0 && A.y == 1.0);
         assert!(A == C);
 
-        let A = vec2((1.0f32, 2.0f32));
-        let B = vec2((4.0f32, 5.0f32));
+        let A = vec2!(1.0f32, 2.0f32);
+        let B = vec2!(4.0f32, 5.0f32);
         let C = A + B;
-        assert_eq!(C, vec2(( 5,  7 )));
+        assert_eq!(C, vec2!( 5,  7 ));
 
         let D = B - A;
-        assert_eq!(D, vec2(( 3,  3 )));
+        assert_eq!(D, vec2!( 3,  3 ));
 
         let E = A * B;
-        assert_eq!(E, vec2(( 4, 10 )));
+        assert_eq!(E, vec2!( 4, 10 ));
 
         let F = B / A;
-        assert_eq!(F, vec2(( 4, 2.5f32 )));
+        assert_eq!(F, vec2!( 4, 2.5f32 ));
 
         let G = A + 1.0f32;
-        assert_eq!(G, vec2(( 2,  3 )));
+        assert_eq!(G, vec2!( 2,  3 ));
 
         let H = B - 1.0f32;
-        assert_eq!(H, vec2(( 3,  4 )));
+        assert_eq!(H, vec2!( 3,  4 ));
 
         let I = A * 2.0f32;
-        assert_eq!(I, vec2(( 2,  4 )));
+        assert_eq!(I, vec2!( 2,  4 ));
 
         let J = B / 2.0f32;
-        assert_eq!(J, vec2(( 2, 2.5f32 )));
+        assert_eq!(J, vec2!( 2, 2.5f32 ));
 
         let K = S(1.0f32) + A;
-        assert_eq!(K, vec2(( 2,  3 )));
+        assert_eq!(K, vec2!( 2,  3 ));
 
         let L = S(1.0f32) - B;
-        assert_eq!(L, vec2((-3, -4 )));
+        assert_eq!(L, vec2!(-3, -4 ));
 
         let M = S(2.0f32) * A;
-        assert_eq!(M, vec2(( 2,  4 )));
+        assert_eq!(M, vec2!( 2,  4 ));
 
         let N = S(2.0f32) / B;
-        assert_eq!(N, vec2(( 0.5f32,  2.0f32/5.0f32 )));
+        assert_eq!(N, vec2!( 0.5f32,  2.0f32/5.0f32 ));
 
-        let A = vec2(( 1,  2 ));
-        let B = vec2(( 4,  5 ));
+        let A = vec2!( 1,  2 );
+        let B = vec2!( 4,  5 );
         let mut A = A;
         A.add_assign(&B);
-        assert_eq!(A, vec2(( 5, 7 )));
+        assert_eq!(A, vec2!( 5, 7 ));
 
         A.add_assign(&1.0f32);
-        assert_eq!(A, vec2(( 6, 8 )));
+        assert_eq!(A, vec2!( 6, 8 ));
 
-        let A = vec2(( 1,  2 ));
-        let B = vec2(( 4,  5 ));
+        let A = vec2!( 1,  2 );
+        let B = vec2!( 4,  5 );
         let mut B = B;
         B.sub_assign(&A);
-        assert_eq!(B, vec2(( 3, 3 )));
+        assert_eq!(B, vec2!( 3, 3 ));
 
         B.sub_assign(&1.0f32);
-        assert_eq!(B, vec2(( 2, 2 )));
+        assert_eq!(B, vec2!( 2, 2 ));
 
-        let A = vec2(( 1,  2 ));
-        let B = vec2(( 4,  5 ));
+        let A = vec2!( 1,  2 );
+        let B = vec2!( 4,  5 );
         let mut A = A;
         A.mul_assign(&B);
-        assert_eq!(A, vec2(( 4, 10 )));
+        assert_eq!(A, vec2!( 4, 10 ));
 
         A.mul_assign(&2.0f32);
-        assert_eq!(A, vec2(( 8, 20 )));
+        assert_eq!(A, vec2!( 8, 20 ));
 
-        let A = vec2(( 1,  2 ));
-        let B = vec2(( 4,  5 ));
+        let A = vec2!( 1,  2 );
+        let B = vec2!( 4,  5 );
         let mut B = B;
         B.div_assign(&A);
-        assert_eq!(B, vec2(( 4, 2.5f32 )));
+        assert_eq!(B, vec2!( 4, 2.5f32 ));
 
         B.div_assign(&2.0f32);
-        assert_eq!(B, vec2(( 2, 1.25f32 )));
+        assert_eq!(B, vec2!( 2, 1.25f32 ));
 
-        let B = vec2(2.0f32);
+        let B = vec2!(2.0f32);
         let mut B = B;
         let B_y = B.y;
         B.div_assign(&B_y);
-        assert_eq!(B, vec2( 1.0f32 ));
+        assert_eq!(B, vec2!( 1.0f32 ));
 
-        let A = vec2(( 1.0f32, 2.0f32 ));
+        let A = vec2!( 1.0f32, 2.0f32 );
         let B = -A;
-        assert_eq!(B, vec2(( -1.0f32, -2.0f32 )));
+        assert_eq!(B, vec2!( -1.0f32, -2.0f32 ));
     }
 
     #[test]
     fn test_incr_decr_operators() {
-        let A = vec2(( 1.0f32, 2.0f32 ));
+        let A = vec2!( 1.0f32, 2.0f32 );
         let mut A = A;
         {
             let B = A.predecrement(); // Rust does not have operator--(int).
-            assert_eq!(*B, vec2(( 0.0f32, 1.0f32 )));
+            assert_eq!(*B, vec2!( 0.0f32, 1.0f32 ));
         }
-        assert_eq!(A, vec2(( 0.0f32, 1.0f32 )));
+        assert_eq!(A, vec2!( 0.0f32, 1.0f32 ));
 
-        let A = vec2(( 1.0f32, 2.0f32 ));
+        let A = vec2!( 1.0f32, 2.0f32 );
         let mut A = A;
         let B = A.postdecrement(); // Rust does not have operator--().
-        assert_eq!(B, vec2(( 1.0f32, 2.0f32 )));
-        assert_eq!(A, vec2(( 0.0f32, 1.0f32 )));
+        assert_eq!(B, vec2!( 1.0f32, 2.0f32 ));
+        assert_eq!(A, vec2!( 0.0f32, 1.0f32 ));
 
-        let A = vec2(( 1.0f32, 2.0f32 ));
+        let A = vec2!( 1.0f32, 2.0f32 );
         let mut A = A;
         {
             let B = A.preincrement(); // Rust does not have operator++(int).
-            assert_eq!(*B, vec2(( 2.0f32, 3.0f32 )));
+            assert_eq!(*B, vec2!( 2.0f32, 3.0f32 ));
         }
-        assert_eq!(A, vec2(( 2.0f32, 3.0f32 )));
+        assert_eq!(A, vec2!( 2.0f32, 3.0f32 ));
 
-        let A = vec2(( 1.0f32, 2.0f32 ));
+        let A = vec2!( 1.0f32, 2.0f32 );
         let mut A = A;
         let B = A.postincrement(); // Rust does not have operator++().
-        assert_eq!(B, vec2(( 1.0f32, 2.0f32 )));
-        assert_eq!(A, vec2(( 2.0f32, 3.0f32 )));
+        assert_eq!(B, vec2!( 1.0f32, 2.0f32 ));
+        assert_eq!(A, vec2!( 2.0f32, 3.0f32 ));
 
     }
 }
@@ -1026,143 +1031,143 @@ mod vec3_tests {
 
     #[test]
     fn test_ctor() {
-        let A = vec3(1);
-        let B = vec3(( 1, 1, 1 ));
+        let A = vec3!(1);
+        let B = vec3!( 1, 1, 1 );
         assert_eq!(A, B);
 
         let mut Tests = vec![];
-        Tests.push(vec3((vec2((1,2)), 3)));
-        Tests.push(vec3((1, vec2((2,3)))));
-        Tests.push(vec3((1, 2, 3)));
-        Tests.push(vec3(vec4((1, 2, 3, 4))));
+        Tests.push(vec3!(vec2!(1,2), 3));
+        Tests.push(vec3!(1, vec2!(2,3)));
+        Tests.push(vec3!(1, 2, 3));
+        Tests.push(vec3!(vec4!(1, 2, 3, 4)));
 
         for v in Tests.iter() {
-            assert_eq!(*v, vec3((1, 2, 3)));
+            assert_eq!(*v, vec3!(1, 2, 3));
         }
     }
 
     #[test]
     fn test_operators() {
-        let A = vec3(1.0f32);
-        let B = vec3(1.0f32);
+        let A = vec3!(1.0f32);
+        let B = vec3!(1.0f32);
         assert!(A == B);
 
-        let A = vec3((1.0f32, 2.0f32, 3.0f32));
-        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+        let A = vec3!(1.0f32, 2.0f32, 3.0f32);
+        let B = vec3!(4.0f32, 5.0f32, 6.0f32);
 
         let C = A + B;
-        assert_eq!(C, vec3((5, 7, 9)));
+        assert_eq!(C, vec3!(5, 7, 9));
 
         let D = B - A;
-        assert_eq!(D, vec3((3, 3, 3)));
+        assert_eq!(D, vec3!(3, 3, 3));
 
         let E = A * B;
-        assert_eq!(E, vec3((4, 10, 18)));
+        assert_eq!(E, vec3!(4, 10, 18));
 
         let F = B / A;
-        assert_eq!(F, vec3((4, 2.5f32, 2)));
+        assert_eq!(F, vec3!(4, 2.5f32, 2));
 
         let G = A + 1.0f32;
-        assert_eq!(G, vec3((2, 3, 4)));
+        assert_eq!(G, vec3!(2, 3, 4));
 
         let H = B - 1.0f32;
-        assert_eq!(H, vec3((3, 4, 5)));
+        assert_eq!(H, vec3!(3, 4, 5));
 
         let I = A * 2.0f32;
-        assert_eq!(I, vec3((2, 4, 6)));
+        assert_eq!(I, vec3!(2, 4, 6));
 
         let J = B / 2.0f32;
-        assert_eq!(J, vec3((2, 2.5f32, 3)));
+        assert_eq!(J, vec3!(2, 2.5f32, 3));
 
         let K = S(1.0f32) + A;
-        assert_eq!(K, vec3((2, 3, 4)));
+        assert_eq!(K, vec3!(2, 3, 4));
 
         let L = S(1.0f32) - B;
-        assert_eq!(L, vec3((-3, -4, -5)));
+        assert_eq!(L, vec3!(-3, -4, -5));
 
         let M = S(2.0f32) * A;
-        assert_eq!(M, vec3((2, 4, 6)));
+        assert_eq!(M, vec3!(2, 4, 6));
 
         let N = S(2.0f32) / B;
-        assert_eq!(N, vec3((0.5f32, 2.0f32 / 5.0f32, 2.0f32 / 6.0f32)));
+        assert_eq!(N, vec3!(0.5f32, 2.0f32 / 5.0f32, 2.0f32 / 6.0f32));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
-        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
+        let B = vec3!(4.0f32, 5.0f32, 6.0f32);
 
         A.add_assign(&B);
-        assert_eq!(A, vec3((5, 7, 9)));
+        assert_eq!(A, vec3!(5, 7, 9));
 
         A.add_assign(&1.0f32);
-        assert_eq!(A, vec3((6, 8, 10)));
+        assert_eq!(A, vec3!(6, 8, 10));
 
-        let A = vec3((1.0f32, 2.0f32, 3.0f32));
-        let mut B = vec3((4.0f32, 5.0f32, 6.0f32));
+        let A = vec3!(1.0f32, 2.0f32, 3.0f32);
+        let mut B = vec3!(4.0f32, 5.0f32, 6.0f32);
 
         B.sub_assign(&A);
-        assert_eq!(B, vec3((3, 3, 3)));
+        assert_eq!(B, vec3!(3, 3, 3));
 
         B.sub_assign(&1.0f32);
-        assert_eq!(B, vec3((2, 2, 2)));
+        assert_eq!(B, vec3!(2, 2, 2));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
-        let B = vec3((4.0f32, 5.0f32, 6.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
+        let B = vec3!(4.0f32, 5.0f32, 6.0f32);
 
         A.mul_assign(&B);
-        assert_eq!(A, vec3((4, 10, 18)));
+        assert_eq!(A, vec3!(4, 10, 18));
 
         A.mul_assign(&2.0f32);
-        assert_eq!(A, vec3((8, 20, 36)));
+        assert_eq!(A, vec3!(8, 20, 36));
 
-        let A = vec3((1.0f32, 2.0f32, 3.0f32));
-        let mut B = vec3((4.0f32, 5.0f32, 6.0f32));
+        let A = vec3!(1.0f32, 2.0f32, 3.0f32);
+        let mut B = vec3!(4.0f32, 5.0f32, 6.0f32);
 
         B.div_assign(&A);
-        assert_eq!(B, vec3((4, 2.5f32, 2)));
+        assert_eq!(B, vec3!(4, 2.5f32, 2));
 
         B.div_assign(&2.0f32);
-        assert_eq!(B, vec3((2, 1.25f32, 1)));
+        assert_eq!(B, vec3!(2, 1.25f32, 1));
 
-        let B = vec3(2.0f32);
+        let B = vec3!(2.0f32);
         let mut B = B;
         let B_y = B.y;
         B.div_assign(&B_y);
-        assert_eq!(B, vec3(1.0f32));
+        assert_eq!(B, vec3!(1.0f32));
 
-        let A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let A = vec3!(1.0f32, 2.0f32, 3.0f32);
         let B = -A;
-        assert_eq!(B, vec3((-1.0f32, -2.0f32, -3.0f32)));
+        assert_eq!(B, vec3!(-1.0f32, -2.0f32, -3.0f32));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
         let B = A.predecrement();
-        assert_eq!(*B, vec3((0.0f32, 1.0f32, 2.0f32)));
+        assert_eq!(*B, vec3!(0.0f32, 1.0f32, 2.0f32));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
         let B = A.postdecrement();
-        assert_eq!(B, vec3((1.0f32, 2.0f32, 3.0f32)));
-        assert_eq!(A, vec3((0.0f32, 1.0f32, 2.0f32)));
+        assert_eq!(B, vec3!(1.0f32, 2.0f32, 3.0f32));
+        assert_eq!(A, vec3!(0.0f32, 1.0f32, 2.0f32));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
         let B = A.preincrement();
-        assert_eq!(*B, vec3((2.0f32, 3.0f32, 4.0f32)));
+        assert_eq!(*B, vec3!(2.0f32, 3.0f32, 4.0f32));
 
-        let mut A = vec3((1.0f32, 2.0f32, 3.0f32));
+        let mut A = vec3!(1.0f32, 2.0f32, 3.0f32);
         let B = A.postincrement();
-        assert_eq!(B, vec3((1.0f32, 2.0f32, 3.0f32)));
-        assert_eq!(A, vec3((2.0f32, 3.0f32, 4.0f32)));
+        assert_eq!(B, vec3!(1.0f32, 2.0f32, 3.0f32));
+        assert_eq!(A, vec3!(2.0f32, 3.0f32, 4.0f32));
     }
 
     #[test]
     fn test_swizzle_functions() {
         // vec2
-        let a = vec2((1, 2));
-        let b = vec2((10, 20));
-        let r = dot(a, b);                       assert_eq!(r as int, 50);
-        let r = dot(vec2(a.xy()), vec2(b.xy())); assert_eq!(r as int, 50);
-        let r = dot(vec2(a.xy()), vec2(b.yy())); assert_eq!(r as int, 60);
+        let a = vec2!(1, 2);
+        let b = vec2!(10, 20);
+        let r = dot(a, b);                         assert_eq!(r as int, 50);
+        let r = dot(vec2!(a.xy()), vec2!(b.xy())); assert_eq!(r as int, 50);
+        let r = dot(vec2!(a.xy()), vec2!(b.yy())); assert_eq!(r as int, 60);
 
         // vec3
-        let u = vec3((1, 2, 3));
-        let v = vec3((10, 20, 30));
+        let u = vec3!(1, 2, 3);
+        let v = vec3!(10, 20, 30);
         let r = dot(u, v);                       assert_eq!(r as int, 140);
         let r = dot(u.xyz(), v.zyz());           assert_eq!(r as int, 160);
         let r = dot(u, v.zyx());                 assert_eq!(r as int, 100);
@@ -1170,8 +1175,8 @@ mod vec3_tests {
         let r = dot(u.xy(), v.xy());             assert_eq!(r as int, 50);
 
         // vec4
-        let s = vec4((1, 2, 3, 4));
-        let t = vec4((10, 20, 30, 40));
+        let s = vec4!(1, 2, 3, 4);
+        let t = vec4!(10, 20, 30, 40);
         let r = dot(s, t);                       assert_eq!(r as int, 300);
         let r = dot(s.xyzw(), t.xyzw());         assert_eq!(r as int, 300);
         let r = dot(s.xyz(), t.xyz());           assert_eq!(r as int, 140);
@@ -1220,130 +1225,130 @@ mod vec4_tests {
 
     #[test]
     fn test_ctor() {
-        let A = vec4(1);
-        let B = vec4((1, 1, 1, 1));
+        let A = vec4!(1);
+        let B = vec4!(1, 1, 1, 1);
         assert_eq!(A, B);
 
         let mut Tests = vec![];
-        Tests.push(vec4((vec2((1, 2)), 3, 4)));
-        Tests.push(vec4((1, vec2((2, 3)), 4)));
-        Tests.push(vec4((1, 2, vec2((3, 4)))));
-        Tests.push(vec4((vec3((1, 2, 3)), 4)));
-        Tests.push(vec4((1, vec3((2, 3, 4)))));
-        Tests.push(vec4((vec2((1, 2)), vec2((3, 4)))));
-        Tests.push(vec4((1, 2, 3, 4)));
-        Tests.push(vec4(vec4((1, 2, 3, 4))));
+        Tests.push(vec4!(vec2!(1, 2), 3, 4));
+        Tests.push(vec4!(1, vec2!(2, 3), 4));
+        Tests.push(vec4!(1, 2, vec2!(3, 4)));
+        Tests.push(vec4!(vec3!(1, 2, 3), 4));
+        Tests.push(vec4!(1, vec3!(2, 3, 4)));
+        Tests.push(vec4!(vec2!(1, 2), vec2!(3, 4)));
+        Tests.push(vec4!(1, 2, 3, 4));
+        Tests.push(vec4!(vec4!(1, 2, 3, 4)));
 
         for v in Tests.iter() {
-            assert_eq!(*v, vec4((1, 2, 3, 4)));
+            assert_eq!(*v, vec4!(1, 2, 3, 4));
         }
     }
 
     #[test]
     fn test_operators() {
-        let A = vec4(1.0f32);
-        let B = vec4(1.0f32);
+        let A = vec4!(1.0f32);
+        let B = vec4!(1.0f32);
         assert!(A == B);
 
-        let A = vec4((1f32, 2f32, 3f32, 4f32));
-        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        let A = vec4!(1f32, 2f32, 3f32, 4f32);
+        let B = vec4!(4f32, 5f32, 6f32, 7f32);
         let C = A + B;
-        assert_eq!(C, vec4((5, 7, 9, 11)));
+        assert_eq!(C, vec4!(5, 7, 9, 11));
         let D = B - A;
-        assert_eq!(D, vec4((3, 3, 3, 3)));
+        assert_eq!(D, vec4!(3, 3, 3, 3));
         let E = A * B;
-        assert_eq!(E, vec4((4, 10, 18, 28)));
+        assert_eq!(E, vec4!(4, 10, 18, 28));
         let F = B / A;
-        assert_eq!(F, vec4((4, 2.5f32, 2, 7f32 / 4f32)));
+        assert_eq!(F, vec4!(4, 2.5f32, 2, 7f32 / 4f32));
         let G = A + 1f32;
-        assert_eq!(G, vec4((2, 3, 4, 5)));
+        assert_eq!(G, vec4!(2, 3, 4, 5));
         let H = B - 1f32;
-        assert_eq!(H, vec4((3, 4, 5, 6)));
+        assert_eq!(H, vec4!(3, 4, 5, 6));
         let I = A * 2f32;
-        assert_eq!(I, vec4((2, 4, 6, 8)));
+        assert_eq!(I, vec4!(2, 4, 6, 8));
         let J = B / 2f32;
-        assert_eq!(J, vec4((2, 2.5f32, 3, 3.5f32)));
+        assert_eq!(J, vec4!(2, 2.5f32, 3, 3.5f32));
         let K = S(1f32) + A;
-        assert_eq!(K, vec4((2, 3, 4, 5)));
+        assert_eq!(K, vec4!(2, 3, 4, 5));
         let L = S(1f32) - B;
-        assert_eq!(L, vec4((-3, -4, -5, -6)));
+        assert_eq!(L, vec4!(-3, -4, -5, -6));
         let M = S(2f32) * A;
-        assert_eq!(M, vec4((2, 4, 6, 8)));
+        assert_eq!(M, vec4!(2, 4, 6, 8));
         let N = S(2f32) / B;
-        assert_eq!(N, vec4((0.5f32, 2f32 / 5f32, 2f32 / 6f32, 2f32 / 7f32)));
+        assert_eq!(N, vec4!(0.5f32, 2f32 / 5f32, 2f32 / 6f32, 2f32 / 7f32));
 
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
-        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
+        let B = vec4!(4f32, 5f32, 6f32, 7f32);
         A.add_assign(&B);
-        assert_eq!(A, vec4((5, 7, 9, 11)));
+        assert_eq!(A, vec4!(5, 7, 9, 11));
         A.add_assign(&1f32);
-        assert_eq!(A, vec4((6, 8, 10, 12)));
-        let A = vec4((1f32, 2f32, 3f32, 4f32));
-        let mut B = vec4((4f32, 5f32, 6f32, 7f32));
+        assert_eq!(A, vec4!(6, 8, 10, 12));
+        let A = vec4!(1f32, 2f32, 3f32, 4f32);
+        let mut B = vec4!(4f32, 5f32, 6f32, 7f32);
         B.sub_assign(&A);
-        assert_eq!(B, vec4((3, 3, 3, 3)));
+        assert_eq!(B, vec4!(3, 3, 3, 3));
         B.sub_assign(&1f32);
-        assert_eq!(B, vec4((2, 2, 2, 2)));
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
-        let B = vec4((4f32, 5f32, 6f32, 7f32));
+        assert_eq!(B, vec4!(2, 2, 2, 2));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
+        let B = vec4!(4f32, 5f32, 6f32, 7f32);
         A.mul_assign(&B);
-        assert_eq!(A, vec4((4, 10, 18, 28)));
+        assert_eq!(A, vec4!(4, 10, 18, 28));
         A.mul_assign(&2f32);
-        assert_eq!(A, vec4((8, 20, 36, 56)));
-        let A = vec4((1f32, 2f32, 3f32, 4f32));
-        let mut B = vec4((4f32, 5f32, 6f32, 7f32));
+        assert_eq!(A, vec4!(8, 20, 36, 56));
+        let A = vec4!(1f32, 2f32, 3f32, 4f32);
+        let mut B = vec4!(4f32, 5f32, 6f32, 7f32);
         B.div_assign(&A);
-        assert_eq!(B, vec4((4f32, 2.5f32, 2f32, 7f32 / 4f32)));
+        assert_eq!(B, vec4!(4f32, 2.5f32, 2f32, 7f32 / 4f32));
         B.div_assign(&2f32);
-        assert_eq!(B, vec4((2f32, 1.25f32, 1f32, 7f32 / 4f32 / 2f32)));
+        assert_eq!(B, vec4!(2f32, 1.25f32, 1f32, 7f32 / 4f32 / 2f32));
 
-        let mut B = vec4(2f32);
+        let mut B = vec4!(2f32);
         let B_y = B.y;
         B.div_assign(&B_y);
-        assert_eq!(B, vec4(1f32));
+        assert_eq!(B, vec4!(1f32));
 
-        let A = vec4((1f32, 2f32, 3f32, 4f32));
+        let A = vec4!(1f32, 2f32, 3f32, 4f32);
         let B = -A;
-        assert_eq!(B, vec4((-1f32, -2f32, -3f32, -4f32)));
+        assert_eq!(B, vec4!(-1f32, -2f32, -3f32, -4f32));
 
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
         let B = A.predecrement();
-        assert_eq!(*B, vec4((0f32, 1f32, 2f32, 3f32)));
+        assert_eq!(*B, vec4!(0f32, 1f32, 2f32, 3f32));
 
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
         let B = A.postdecrement();
-        assert_eq!(B, vec4((1f32, 2f32, 3f32, 4f32)));
-        assert_eq!(A, vec4((0f32, 1f32, 2f32, 3f32)));
+        assert_eq!(B, vec4!(1f32, 2f32, 3f32, 4f32));
+        assert_eq!(A, vec4!(0f32, 1f32, 2f32, 3f32));
 
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
         let B = A.preincrement();
-        assert_eq!(*B, vec4((2f32, 3f32, 4f32, 5f32)));
+        assert_eq!(*B, vec4!(2f32, 3f32, 4f32, 5f32));
 
-        let mut A = vec4((1f32, 2f32, 3f32, 4f32));
+        let mut A = vec4!(1f32, 2f32, 3f32, 4f32);
         let B = A.postincrement();
-        assert_eq!(B, vec4((1f32, 2f32, 3f32, 4f32)));
-        assert_eq!(A, vec4((2f32, 3f32, 4f32, 5f32)));
+        assert_eq!(B, vec4!(1f32, 2f32, 3f32, 4f32));
+        assert_eq!(A, vec4!(2f32, 3f32, 4f32, 5f32));
     }
 
     #[test]
     fn test_swizzle_partial() {
-        let A = vec4((1, 2, 3, 4));
-        let B = vec4((A.xy(), A.zw()));
+        let A = vec4!(1, 2, 3, 4);
+        let B = vec4!(A.xy(), A.zw());
         assert_eq!(A, B);
 
-        let B = vec4((A.xy(), 3f32, 4f32));
+        let B = vec4!(A.xy(), 3f32, 4f32);
         assert_eq!(A, B);
 
-        let B = vec4((1f32, A.yz(), 4f32));
+        let B = vec4!(1f32, A.yz(), 4f32);
         assert_eq!(A, B);
 
-        let B = vec4((1f32, 2f32, A.zw()));
+        let B = vec4!(1f32, 2f32, A.zw());
         assert_eq!(A, B);
 
-        let B = vec4((A.xyz(), 4f32));
+        let B = vec4!(A.xyz(), 4f32);
         assert_eq!(A, B);
 
-        let B = vec4((1f32, A.yzw()));
+        let B = vec4!(1f32, A.yzw());
         assert_eq!(A, B);
     }
 
