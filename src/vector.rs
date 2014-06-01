@@ -411,6 +411,37 @@ impl_IncrementDecrement_for!{ TVec2 x, y }
 impl_IncrementDecrement_for!{ TVec3 x, y, z }
 impl_IncrementDecrement_for!{ TVec4 x, y, z, w }
 
+macro_rules! impl_Neg_for {
+    ($TVec:ident $($x:ident),*) => {
+        impl<T:Neg<T>> Neg<$TVec<T>> for $TVec<T> {
+            fn neg(&self) -> $TVec<T> { $TVec{ $( $x: -self.$x ),* } }
+        }
+    }
+}
+
+impl_Neg_for!{ TVec1 x }
+impl_Neg_for!{ TVec2 x, y }
+impl_Neg_for!{ TVec3 x, y, z }
+impl_Neg_for!{ TVec4 x, y, z, w }
+
+macro_rules! impl_DotProduct_for {
+    ($TVec:ident $($x:ident),*) => {
+        impl<T:Num> DotProduct<T> for $TVec<T> {
+            fn dot(&self, rhs: &$TVec<T>) -> T {
+                use std::num::Zero;
+                let mut sum : T = Zero::zero();
+                { $( sum = sum + self.$x * rhs.$x; )* }
+                sum
+            }
+        }
+    }
+}
+
+impl_DotProduct_for!{ TVec1 x }
+impl_DotProduct_for!{ TVec2 x, y }
+impl_DotProduct_for!{ TVec3 x, y, z }
+impl_DotProduct_for!{ TVec4 x, y, z, w }
+
 pub trait Vec2Args { fn make(self) -> vec2; }
 
 pub fn vec2<Args:Vec2Args>(args: Args) -> vec2 { args.make() }
@@ -437,16 +468,6 @@ impl_Vec2Args_for!(f32,f32)
 impl_Vec2Args_for!(vec2 2 TVec2)
 impl_Vec2Args_for!(vec3 2 TVec3)
 impl_Vec2Args_for!(vec4 2 TVec4)
-
-impl<T:Neg<T>> Neg<TVec2<T>> for TVec2<T> {
-    fn neg(&self) -> TVec2<T> {
-        TVec2 { x: -self.x, y: -self.y }
-    }
-}
-
-impl<T:Num> DotProduct<T> for TVec2<T> {
-    fn dot(&self, rhs: &TVec2<T>) -> T { self.x * rhs.x + self.y * rhs.y }
-}
 
 macro_rules! double_dispatch_T {
     ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
@@ -712,52 +733,6 @@ impl_Vec3Args_for!(vec3 3 TVec3)
 impl_Vec3Args_for!(vec4 3 TVec4)
 impl Vec3Args for [int, ..3] { fn make(self) -> vec3 { let v = self; TVec3 { x: v[0] as f32, y: v[1] as f32, z: v[2] as f32 } } }
 
-impl<T:Neg<T>> Neg<TVec3<T>> for TVec3<T> {
-    fn neg(&self) -> TVec3<T> {
-        TVec3 { x: -self.x, y: -self.y, z: -self.z }
-    }
-}
-
-impl<T:Num> DotProduct<T> for TVec3<T> {
-    fn dot(&self, rhs: &TVec3<T>) -> T { self.x * rhs.x + self.y * rhs.y + self.z * rhs.z }
-}
-
-impl<T:Num + Clone> TVec3<T> {
-    pub fn postdecrement(&mut self) -> TVec3<T> {
-        use std::num::One;
-        let ret = TVec3{ x: self.x.clone(), y: self.y.clone(), z: self.z.clone() };
-        self.x = self.x - One::one();
-        self.y = self.y - One::one();
-        self.z = self.z - One::one();
-        ret
-    }
-
-    pub fn predecrement<'a>(&'a mut self) -> &'a mut TVec3<T> {
-        use std::num::One;
-        self.x = self.x - One::one();
-        self.y = self.y - One::one();
-        self.z = self.z - One::one();
-        self
-    }
-
-    pub fn postincrement(&mut self) -> TVec3<T> {
-        use std::num::One;
-        let ret = TVec3{ x: self.x.clone(), y: self.y.clone(), z: self.z.clone() };
-        self.x = self.x + One::one();
-        self.y = self.y + One::one();
-        self.z = self.z + One::one();
-        ret
-    }
-
-    pub fn preincrement<'a>(&'a mut self) -> &'a mut TVec3<T> {
-        use std::num::One;
-        self.x = self.x + One::one();
-        self.y = self.y + One::one();
-        self.z = self.z + One::one();
-        self
-    }
-}
-
 pub trait Vec4Args { fn make(self) -> vec4; }
 pub fn vec4<Args:Vec4Args>(args: Args) -> vec4 { args.make() }
 
@@ -838,18 +813,6 @@ impl_Vec4Args_for!(f32, vec3 3)
 impl_Vec4Args_for!(vec3 3, int)
 impl_Vec4Args_for!(vec3 3, f32)
 impl_Vec4Args_for!(vec4 4 TVec4)
-
-impl<T:Neg<T>> Neg<TVec4<T>> for TVec4<T> {
-    fn neg(&self) -> TVec4<T> {
-        TVec4 { x: -self.x, y: -self.y, z: -self.z, w: -self.w }
-    }
-}
-
-impl<T:Num> DotProduct<T> for TVec4<T> {
-    fn dot(&self, rhs: &TVec4<T>) -> T {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z + self.w * rhs.w
-    }
-}
 
 #[cfg(test)]
 mod vec1_tests {
