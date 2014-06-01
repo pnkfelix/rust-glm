@@ -1,4 +1,4 @@
-pub use src::typedefs::{mat2x2};
+pub use src::typedefs::{vec2,mat2x2};
 
 use src::vector::{TVec2,TVec2MulRHS};
 use src::scalar::{S,SMulRHS,SDivRHS};
@@ -107,6 +107,71 @@ macro_rules! impl_Mat2x2Args_for {
                                 [c as f32,d as f32]] }
             }
         }
+        impl Mat2x2Args for (($a,$b),$c,$d) {
+            fn make(self) -> mat2x2 {
+                let ((a,b),c,d) = self;
+                TMat2 { elems: [[a as f32,b as f32],
+                                [c as f32,d as f32]] }
+            }
+        }
+        impl Mat2x2Args for ($a,$b,($c,$d)) {
+            fn make(self) -> mat2x2 {
+                let (a,b,(c,d)) = self;
+                TMat2 { elems: [[a as f32,b as f32],
+                                [c as f32,d as f32]] }
+            }
+        }
+        impl Mat2x2Args for (($a,$b),($c,$d)) {
+            fn make(self) -> mat2x2 {
+                let ((a,b),(c,d)) = self;
+                TMat2 { elems: [[a as f32,b as f32],
+                                [c as f32,d as f32]] }
+            }
+        }
+    }
+    ;
+    ($a:ident 2,$b:ident,$c:ident) => {
+        impl Mat2x2Args for ($a,$b,$c) {
+            fn make(self) -> mat2x2 {
+                let (a,b,c) = self;
+                TMat2 { elems: [[a.x as f32,a.y as f32],
+                                [b as f32,  c as f32]] }
+            }
+        }
+        impl Mat2x2Args for ($a,($b,$c)) {
+            fn make(self) -> mat2x2 {
+                let (a,(b,c)) = self;
+                TMat2 { elems: [[a.x as f32,a.y as f32],
+                                [b as f32,  c as f32]] }
+            }
+        }
+    }
+    ;
+    ($a:ident,$b:ident,$c:ident 2) => {
+        impl Mat2x2Args for ($a,$b,$c) {
+            fn make(self) -> mat2x2 {
+                let (a,b,c) = self;
+                TMat2 { elems: [[a as f32,  b as f32],
+                                [c.x as f32,c.y as f32]] }
+            }
+        }
+        impl Mat2x2Args for (($a,$b),$c) {
+            fn make(self) -> mat2x2 {
+                let ((a,b),c) = self;
+                TMat2 { elems: [[a as f32,  b as f32],
+                                [c.x as f32,c.y as f32]] }
+            }
+        }
+    }
+    ;
+    ($a:ident 2,$b:ident 2) => {
+        impl Mat2x2Args for ($a,$b) {
+            fn make(self) -> mat2x2 {
+                let (a,b) = self;
+                TMat2 { elems: [[a.x as f32,a.y as f32],
+                                [b.x as f32,b.y as f32]] }
+            }
+        }
     }
     ;
 }
@@ -129,7 +194,7 @@ impl_Mat2x2Args_for!(f32,f32,int,int)
 impl_Mat2x2Args_for!(f32,f32,int,f32)
 impl_Mat2x2Args_for!(f32,f32,f32,int)
 impl_Mat2x2Args_for!(f32,f32,f32,f32)
-
+impl_Mat2x2Args_for!(vec2 2,vec2 2)
 double_dispatch_T!{Mul for TMat2 mul via TMat2MulRHS rev_mul}
 double_dispatch_T!{Div for TMat2 div via TMat2DivRHS rev_div}
 
@@ -233,5 +298,18 @@ mod mat2x2_tests {
         let Identity = Matrix * Inverse;
 
         assert!(Identity.row(0).epsilon_eq(&vec2((1f32, 0f32)), &vec2(0.01f32)));
+        assert!(Identity.row(1).epsilon_eq(&vec2((0f32, 1f32)), &vec2(0.01f32)));
+    }
+
+    #[test]
+    fn test_ctr() {
+        let m0 = mat2x2((vec2((0,1)),
+                         vec2((2, 3))));
+        let m1 = mat2x2((0, 1,
+                         2, 3));
+        let m2 = mat2x2(((0, 1),
+                         (2, 3)));
+        assert_eq!(m0, m2);
+        assert_eq!(m1, m2);
     }
 }
