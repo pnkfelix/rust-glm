@@ -469,31 +469,6 @@ impl_Vec2Args_for!(vec2 2 TVec2)
 impl_Vec2Args_for!(vec3 2 TVec3)
 impl_Vec2Args_for!(vec4 2 TVec4)
 
-macro_rules! double_dispatch_T {
-    ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
-        => {
-            pub trait $RHS_trait<T> {
-                fn $rev_method(&self, lhs: & $LHS_type<T>) -> $LHS_type<T>;
-            }
-
-            impl<T,RHS:$RHS_trait<T>> $trait_<RHS,$LHS_type<T>> for $LHS_type<T> {
-                fn $method(&self, rhs: &RHS) -> $LHS_type<T> { rhs.$rev_method(self) }
-            }
-        }
-    ;
-    ( $trait_:ident for mut $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
-        => {
-            pub trait $RHS_trait<T> {
-                fn $rev_method(&self, lhs: &mut $LHS_type<T>);
-            }
-
-            impl<T,RHS:$RHS_trait<T>> $trait_<RHS> for $LHS_type<T> {
-                fn $method(&mut self, rhs: &RHS) { rhs.$rev_method(self) }
-            }
-        }
-
-}
-
 double_dispatch_T!{Add for TVec2 add via TVec2AddRHS rev_add}
 double_dispatch_T!{AddAssign for mut TVec2 add_assign via TVec2AddAssignRHS add_into }
 double_dispatch_T!{Sub for TVec2 sub via TVec2SubRHS rev_sub}

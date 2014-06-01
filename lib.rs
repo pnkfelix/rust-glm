@@ -21,6 +21,31 @@ pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
 
 pub use src::vector::vec2;
 
+macro_rules! double_dispatch_T {
+    ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
+        => {
+            pub trait $RHS_trait<T> {
+                fn $rev_method(&self, lhs: & $LHS_type<T>) -> $LHS_type<T>;
+            }
+
+            impl<T,RHS:$RHS_trait<T>> $trait_<RHS,$LHS_type<T>> for $LHS_type<T> {
+                fn $method(&self, rhs: &RHS) -> $LHS_type<T> { rhs.$rev_method(self) }
+            }
+        }
+    ;
+    ( $trait_:ident for mut $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
+        => {
+            pub trait $RHS_trait<T> {
+                fn $rev_method(&self, lhs: &mut $LHS_type<T>);
+            }
+
+            impl<T,RHS:$RHS_trait<T>> $trait_<RHS> for $LHS_type<T> {
+                fn $method(&mut self, rhs: &RHS) { rhs.$rev_method(self) }
+            }
+        }
+
+}
+
 mod src {
     // all non-lib.rs files go into src/ subdirectory and are thus
     // listed here.
