@@ -30,5 +30,5 @@ run-tests: $(BINDIR)/tests
 bench-tests: $(BINDIR)/tests
 	./$< --bench
 
-$(BINDIR)/tests: $(LIB_RS) $(ALL_SRC_RS) | $(BINDIR)
+$(BINDIR)/tests: $(LIB_RS) $(ALL_SRC_RS) Makefile | $(BINDIR)
 	$(RUSTC) -o $@ --test $(RUSTFLAGS) $<
