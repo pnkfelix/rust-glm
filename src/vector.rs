@@ -410,37 +410,6 @@ impl_IncrementDecrement_for!{ TVec1 x }
 impl_IncrementDecrement_for!{ TVec2 x, y }
 impl_IncrementDecrement_for!{ TVec3 x, y, z }
 impl_IncrementDecrement_for!{ TVec4 x, y, z, w }
-/*
-impl<T:Num + Clone> Decrement for TVec1<T> {
-    fn postdecrement(&mut self) -> TVec1<T> {
-        use std::num::One;
-        let ret = TVec1{ x: self.x.clone() };
-        self.x = self.x - One::one();
-        ret
-    }
-
-    fn predecrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
-        use std::num::One;
-        self.x = self.x - One::one();
-        self
-    }
-}
-
-impl<T:Num + Clone> Increment for TVec1<T> {
-    fn postincrement(&mut self) -> TVec1<T> {
-        use std::num::One;
-        let ret = TVec1{ x: self.x.clone() };
-        self.x = self.x + One::one();
-        ret
-    }
-
-    fn preincrement<'a>(&'a mut self) -> &'a mut TVec1<T> {
-        use std::num::One;
-        self.x = self.x + One::one();
-        self
-    }
-}
-*/
 
 pub trait Vec2Args { fn make(self) -> vec2; }
 
@@ -699,41 +668,6 @@ double_dispatch_usual_impls_4! { f32 div
                                  TVec4DivRHS { rev_div } SDivRHS { rev_div }
                                  TVec4DivAssignRHS { div_into } }
 
-/*
-impl<T:Num + Clone> Decrement for TVec2<T> {
-    fn postdecrement(&mut self) -> TVec2<T> {
-        use std::num::One;
-        let ret = TVec2{ x: self.x.clone(), y: self.y.clone() };
-        self.x = self.x - One::one();
-        self.y = self.y - One::one();
-        ret
-    }
-
-    fn predecrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
-        use std::num::One;
-        self.x = self.x - One::one();
-        self.y = self.y - One::one();
-        self
-    }
-}
-
-impl<T:Num + Clone> Increment for TVec2<T> {
-    fn postincrement(&mut self) -> TVec2<T> {
-        use std::num::One;
-        let ret = TVec2{ x: self.x.clone(), y: self.y.clone() };
-        self.x = self.x + One::one();
-        self.y = self.y + One::one();
-        ret
-    }
-
-    fn preincrement<'a>(&'a mut self) -> &'a mut TVec2<T> {
-        use std::num::One;
-        self.x = self.x + One::one();
-        self.y = self.y + One::one();
-        self
-    }
-}
-*/
 
 pub trait Vec3Args { fn make(self) -> vec3; }
 
