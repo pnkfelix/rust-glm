@@ -1485,4 +1485,38 @@ mod vec4_tests {
             }
         })
     }
+
+    #[bench]
+    fn bench_perf_SoA(b: &mut Bencher) {
+        use std::default::Default;
+        use src::typedefs::{vec2,vec3,vec4};
+
+        let mut InA = Vec::<vec4>::new();
+        let mut InB = Vec::<vec3>::new();
+        let mut InC = Vec::<vec3>::new();
+        let mut InD = Vec::<vec2>::new();
+        let mut OutA = Vec::<vec4>::new();
+        let mut OutB = Vec::<vec3>::new();
+        let mut OutC = Vec::<vec3>::new();
+        let mut OutD = Vec::<vec2>::new();
+
+        for _ in range(0, Size) {
+            InA.push(Default::default());
+            InB.push(Default::default());
+            InC.push(Default::default());
+            InD.push(Default::default());
+            OutA.push(Default::default());
+            OutB.push(Default::default());
+            OutC.push(Default::default());
+            OutD.push(Default::default());
+        }
+        b.iter(|| {
+            for i in range(0u, Size) {
+                *OutA.get_mut(i) = *InA.get(i);
+                *OutB.get_mut(i) = *InB.get(i);
+                *OutC.get_mut(i) = *InC.get(i);
+                *OutD.get_mut(i) = *InD.get(i);
+            }
+        })
+    }
 }
