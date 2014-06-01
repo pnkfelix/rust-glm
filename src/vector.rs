@@ -502,7 +502,7 @@ macro_rules! double_dispatch_usual_impls_2 {
       $S_RHS_trait:ident { $s_rev_method:ident }
       $ASSIGN_RHS_trait:ident { $op_into_method:ident }
       ) => {
-        impl $V_RHS_trait<$ft> for $ft {
+        impl $V_RHS_trait<$ft,TVec2<$ft>> for $ft {
             fn $v_rev_method(&self, lhs: &TVec2<$ft>) -> TVec2<$ft> {
                 TVec2 { x: lhs.x.$op(self), y: lhs.y.$op(self) }
             }
@@ -515,7 +515,7 @@ macro_rules! double_dispatch_usual_impls_2 {
             }
         }
 
-        impl $V_RHS_trait<$ft> for TVec2<$ft> {
+        impl $V_RHS_trait<$ft,TVec2<$ft>> for TVec2<$ft> {
             fn $v_rev_method(&self, lhs: &TVec2<$ft>) -> TVec2<$ft> {
                 TVec2 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y) }
             }
@@ -556,7 +556,7 @@ macro_rules! double_dispatch_usual_impls_3 {
       $S_RHS_trait:ident { $s_rev_method:ident }
       $ASSIGN_RHS_trait:ident { $op_into_method:ident }
       ) => {
-        impl $V_RHS_trait<$ft> for $ft {
+        impl $V_RHS_trait<$ft,TVec3<$ft>> for $ft {
             fn $v_rev_method(&self, lhs: &TVec3<$ft>) -> TVec3<$ft> {
                 TVec3 { x: lhs.x.$op(self), y: lhs.y.$op(self), z: lhs.z.$op(self) }
             }
@@ -569,7 +569,7 @@ macro_rules! double_dispatch_usual_impls_3 {
             }
         }
 
-        impl $V_RHS_trait<$ft> for TVec3<$ft> {
+        impl $V_RHS_trait<$ft,TVec3<$ft>> for TVec3<$ft> {
             fn $v_rev_method(&self, lhs: &TVec3<$ft>) -> TVec3<$ft> {
                 TVec3 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z) }
             }
@@ -612,7 +612,7 @@ macro_rules! double_dispatch_usual_impls_4 {
       $S_RHS_trait:ident { $s_rev_method:ident }
       $ASSIGN_RHS_trait:ident { $op_into_method:ident }
       ) => {
-        impl $V_RHS_trait<$ft> for $ft {
+        impl $V_RHS_trait<$ft,TVec4<$ft>> for $ft {
             fn $v_rev_method(&self, lhs: &TVec4<$ft>) -> TVec4<$ft> {
                 TVec4 { x: lhs.x.$op(self), y: lhs.y.$op(self), z: lhs.z.$op(self), w: lhs.w.$op(self) }
             }
@@ -625,7 +625,7 @@ macro_rules! double_dispatch_usual_impls_4 {
             }
         }
 
-        impl $V_RHS_trait<$ft> for TVec4<$ft> {
+        impl $V_RHS_trait<$ft,TVec4<$ft>> for TVec4<$ft> {
             fn $v_rev_method(&self, lhs: &TVec4<$ft>) -> TVec4<$ft> {
                 TVec4 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z), w: lhs.w.$op(&self.w) }
             }

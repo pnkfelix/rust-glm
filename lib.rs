@@ -24,12 +24,12 @@ pub use src::vector::vec2;
 macro_rules! double_dispatch_T {
     ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
         => {
-            pub trait $RHS_trait<T> {
-                fn $rev_method(&self, lhs: & $LHS_type<T>) -> $LHS_type<T>;
+            pub trait $RHS_trait<T,RET> {
+                fn $rev_method(&self, lhs: & $LHS_type<T>) -> RET;
             }
 
-            impl<T,RHS:$RHS_trait<T>> $trait_<RHS,$LHS_type<T>> for $LHS_type<T> {
-                fn $method(&self, rhs: &RHS) -> $LHS_type<T> { rhs.$rev_method(self) }
+            impl<T,RET,RHS:$RHS_trait<T,RET>> $trait_<RHS,RET> for $LHS_type<T> {
+                fn $method(&self, rhs: &RHS) -> RET { rhs.$rev_method(self) }
             }
         }
     ;
