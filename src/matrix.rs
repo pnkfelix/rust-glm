@@ -410,8 +410,7 @@ macro_rules! impl_Mat2x3Args_for {
                                   [d as f32,e as f32,f as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident 3,
      $d:ident,$e:ident,$f:ident) => {
         impl Mat2x3Args for ($a,
@@ -423,8 +422,7 @@ macro_rules! impl_Mat2x3Args_for {
                                   [d as f32,e as f32,f as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident,$b:ident,$c:ident,
      $d:ident 3) => {
         impl Mat2x3Args for ($a,$b,$c,
@@ -436,8 +434,8 @@ macro_rules! impl_Mat2x3Args_for {
                                   [d.x as f32,d.y as f32,d.z as f32]] }
             }
         }
-    }
-;    ($a:ident 3,
+    };
+    ($a:ident 3,
      $d:ident,$e:ident,$f:ident) => {
         impl Mat2x3Args for ($a,
                              $d,$e,$f) {
@@ -448,8 +446,7 @@ macro_rules! impl_Mat2x3Args_for {
                                   [d as f32,e as f32,f as f32]] }
             }
         }
-    }
-    ;
+    };
     ($a:ident 3,
      $d:ident 3) => {
         impl Mat2x3Args for ($a,
@@ -461,8 +458,7 @@ macro_rules! impl_Mat2x3Args_for {
                                   [d.x as f32,d.y as f32,d.z as f32]] }
             }
         }
-    }
-    ;
+    };
 
 }
 

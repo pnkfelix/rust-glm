@@ -26,34 +26,33 @@ pub use src::matrix::{mat4,mat4x2,mat4x3,mat4x4};
 pub use src::matrix::inverse;
 
 macro_rules! double_dispatch_T {
-    ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
-        => {
-            pub trait $RHS_trait<T,RET> {
-                fn $rev_method(&self, lhs: & $LHS_type<T>) -> RET;
-            }
-
-            impl<T,RET,RHS:$RHS_trait<T,RET>> $trait_<RHS,RET> for $LHS_type<T> {
-                fn $method(&self, rhs: &RHS) -> RET { rhs.$rev_method(self) }
-            }
-        }
-    ;
-    ( $trait_:ident for mut $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident )
-        => {
-            pub trait $RHS_trait<T> {
-                fn $rev_method(&self, lhs: &mut $LHS_type<T>);
-            }
-
-            impl<T,RHS:$RHS_trait<T>> $trait_<RHS> for $LHS_type<T> {
-                fn $method(&mut self, rhs: &RHS) { rhs.$rev_method(self) }
-            }
+    ( $trait_:ident for $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident ) =>
+    {
+        pub trait $RHS_trait<T,RET> {
+            fn $rev_method(&self, lhs: & $LHS_type<T>) -> RET;
         }
 
+        impl<T,RET,RHS:$RHS_trait<T,RET>> $trait_<RHS,RET> for $LHS_type<T> {
+            fn $method(&self, rhs: &RHS) -> RET { rhs.$rev_method(self) }
+        }
+    };
+    ( $trait_:ident for mut $LHS_type:ident $method:ident via $RHS_trait:ident $rev_method:ident ) =>
+    {
+        pub trait $RHS_trait<T> {
+            fn $rev_method(&self, lhs: &mut $LHS_type<T>);
+        }
+
+        impl<T,RHS:$RHS_trait<T>> $trait_<RHS> for $LHS_type<T> {
+            fn $method(&mut self, rhs: &RHS) { rhs.$rev_method(self) }
+        }
+    };
 }
 
 macro_rules! all_choices {
     ( $m:ident :
       todo: {}
-      done: { $( ( $($i:ident),* ) )* } ) => {
+      done: { $( ( $($i:ident),* ) )* } ) =>
+    {
         $( $m!( $($i),* ) )*
     };
     ( $m:ident :
