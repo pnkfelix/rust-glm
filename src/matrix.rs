@@ -657,6 +657,43 @@ double_dispatch_T!{Div for TMat4x2 div via TMat4x2DivRHS rev_div}
 double_dispatch_T!{Mul for TMat4x3 mul via TMat4x3MulRHS rev_mul}
 double_dispatch_T!{Div for TMat4x3 div via TMat4x3DivRHS rev_div}
 
+macro_rules! impl_Scalar_MulDiv_for {
+    ($TMat:ident $TMatMulRHS:ident $TMatDivRHS:ident) => {
+
+        impl<T:Num> $TMatMulRHS<T,$TMat<T>> for S<T> {
+            fn rev_mul(&self, lhs: &$TMat<T>) -> $TMat<T> {
+                let S(ref f) = *self;
+                lhs.map(|x|*x * *f)
+            }
+        }
+
+        impl<T:Num> $TMatDivRHS<T,$TMat<T>> for S<T> {
+            fn rev_div(&self, lhs: &$TMat<T>) -> $TMat<T> {
+                let S(ref f) = *self;
+                lhs.map(|x|*x / *f)
+            }
+        }
+
+        impl<T:Num> SMulRHS<T,$TMat<T>> for $TMat<T> {
+            fn rev_mul(&self, lhs: &S<T>) -> $TMat<T> {
+                let S(ref f) = *lhs;
+                self.map(|x|*f * *x)
+            }
+        }
+
+        impl<T:Num> SDivRHS<T,$TMat<T>> for $TMat<T> {
+            fn rev_div(&self, lhs: &S<T>) -> $TMat<T> {
+                let S(ref f) = *lhs;
+                self.map(|x|*f / *x)
+            }
+        }
+    }
+}
+
+impl_Scalar_MulDiv_for!(TMat2 TMat2x2MulRHS TMat2x2DivRHS)
+impl_Scalar_MulDiv_for!(TMat2x3 TMat2x3MulRHS TMat2x3DivRHS)
+impl_Scalar_MulDiv_for!(TMat2x4 TMat2x4MulRHS TMat2x4DivRHS)
+
 impl<T:Num> TMat2x2MulRHS<T,TMat2<T>> for TMat2<T> {
     fn rev_mul(&self, lhs: &TMat2<T>) -> TMat2<T> {
         let l = &lhs.elems;
@@ -687,104 +724,37 @@ impl<T:Num> TMat2x3MulRHS<T,TMat2<T>> for TMat3x2<T> {
 
 impl<T:Num> TMat2x3MulRHS<T,TVec3<T>> for TVec2<T> {
     fn rev_mul(&self, lhs: &TMat2x3<T>) -> TVec3<T> {
-        let cr00 = &lhs.elems[0][0]; let cr01 = &lhs.elems[0][1]; let cr02 = &lhs.elems[0][2];
-        let cr10 = &lhs.elems[1][0]; let cr11 = &lhs.elems[1][1]; let cr12 = &lhs.elems[1][2];
-        TVec3{ x: *cr00 * self.x + *cr10 * self.y,
-               y: *cr01 * self.x + *cr11 * self.y,
-               z: *cr02 * self.x + *cr12 * self.y }
+        TVec3{ x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
+               y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y,
+               z: lhs.elems[0][2] * self.x + lhs.elems[1][2] * self.y, }
     }
 }
 
 impl<T:Num> TMat2x2MulRHS<T,TVec2<T>> for TVec2<T> {
     fn rev_mul(&self, lhs: &TMat2<T>) -> TVec2<T> {
-        let cr00 = &lhs.elems[0][0]; let cr01 = &lhs.elems[0][1];
-        let cr10 = &lhs.elems[1][0]; let cr11 = &lhs.elems[1][1];
-        TVec2{ x: *cr00 * self.x + *cr10 * self.y,
-               y: *cr01 * self.x + *cr11 * self.y }
+        TVec2{ x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
+               y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y, }
     }
 }
 
 impl<T:Num> TVec2MulRHS<T,TVec2<T>> for TMat2<T> {
     fn rev_mul(&self, lhs: &TVec2<T>) -> TVec2<T> {
-        let cr00 = &self.elems[0][0]; let cr01 = &self.elems[0][1];
-        let cr10 = &self.elems[1][0]; let cr11 = &self.elems[1][1];
-        TVec2{ x: lhs.x * *cr00 + lhs.y * *cr01,
-               y: lhs.x * *cr10 + lhs.y * *cr11 }
+        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1],
+               y: lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1], }
     }
 }
 
 impl<T:Num> TVec3MulRHS<T,TVec2<T>> for TMat2x3<T> {
     fn rev_mul(&self, lhs: &TVec3<T>) -> TVec2<T> {
-        let cr00 = &self.elems[0][0]; let cr01 = &self.elems[0][1]; let cr02 = &self.elems[0][2];
-        let cr10 = &self.elems[1][0]; let cr11 = &self.elems[1][1]; let cr12 = &self.elems[1][2];
-        TVec2{ x: lhs.x * *cr00 + lhs.y * *cr01 + lhs.z * *cr02,
-               y: lhs.x * *cr10 + lhs.y * *cr11 + lhs.z * *cr12, }
+        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1] + lhs.z * self.elems[0][2],
+               y: lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1] + lhs.z * self.elems[1][2], }
     }
 }
 
 impl<T:Num> TVec3MulRHS<T,TVec2<T>> for TMat3x2<T> {
     fn rev_mul(&self, lhs: &TVec3<T>) -> TVec2<T> {
-        let cr00 = &self.elems[0][0]; let cr01 = &self.elems[0][1];
-        let cr10 = &self.elems[1][0]; let cr11 = &self.elems[1][1];
-        let cr20 = &self.elems[2][0]; let cr21 = &self.elems[2][1];
-        TVec2{ x: lhs.x * *cr00 + lhs.y * *cr10 + lhs.z * *cr20,
-               y: lhs.x * *cr01 + lhs.y * *cr11 + lhs.z * *cr21, }
-    }
-}
-
-impl<T:Num> TMat2x2MulRHS<T,TMat2<T>> for S<T> {
-    fn rev_mul(&self, lhs: &TMat2<T>) -> TMat2<T> {
-        let S(ref f) = *self;
-        lhs.map(|x|*x * *f)
-    }
-}
-
-impl<T:Num> TMat2x3MulRHS<T,TMat2x3<T>> for S<T> {
-    fn rev_mul(&self, lhs: &TMat2x3<T>) -> TMat2x3<T> {
-        let S(ref f) = *self;
-        lhs.map(|x|*x * *f)
-    }
-}
-
-impl<T:Num> TMat2x2DivRHS<T,TMat2<T>> for S<T> {
-    fn rev_div(&self, lhs: &TMat2<T>) -> TMat2<T> {
-        let S(ref f) = *self;
-        lhs.map(|x|*x / *f)
-    }
-}
-
-impl<T:Num> TMat2x3DivRHS<T,TMat2x3<T>> for S<T> {
-    fn rev_div(&self, lhs: &TMat2x3<T>) -> TMat2x3<T> {
-        let S(ref f) = *self;
-        lhs.map(|x|*x / *f)
-    }
-}
-
-impl<T:Num> SMulRHS<T,TMat2<T>> for TMat2<T> {
-    fn rev_mul(&self, lhs: &S<T>) -> TMat2<T> {
-        let S(ref f) = *lhs;
-        self.map(|x|*f * *x)
-    }
-}
-
-impl<T:Num> SMulRHS<T,TMat2x3<T>> for TMat2x3<T> {
-    fn rev_mul(&self, lhs: &S<T>) -> TMat2x3<T> {
-        let S(ref f) = *lhs;
-        self.map(|x|*f * *x)
-    }
-}
-
-impl<T:Num> SDivRHS<T,TMat2<T>> for TMat2<T> {
-    fn rev_div(&self, lhs: &S<T>) -> TMat2<T> {
-        let S(ref f) = *lhs;
-        self.map(|x|*f / *x)
-    }
-}
-
-impl<T:Num> SDivRHS<T,TMat2x3<T>> for TMat2x3<T> {
-    fn rev_div(&self, lhs: &S<T>) -> TMat2x3<T> {
-        let S(ref f) = *lhs;
-        self.map(|x|*f / *x)
+        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[1][0] + lhs.z * self.elems[2][0],
+               y: lhs.x * self.elems[0][1] + lhs.y * self.elems[1][1] + lhs.z * self.elems[2][1], }
     }
 }
 
@@ -804,34 +774,6 @@ impl<T:Num> TVec4MulRHS<T,TVec2<T>> for TMat2x4<T> {
                 y: (lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1] +
                     lhs.z * self.elems[1][2] + lhs.w * self.elems[1][3]),
         }
-    }
-}
-
-impl<T:Num> SMulRHS<T,TMat2x4<T>> for TMat2x4<T> {
-    fn rev_mul(&self, lhs: &S<T>) -> TMat2x4<T> {
-        let &S(ref f) = lhs;
-        self.map(|x|*f * *x)
-    }
-}
-
-impl<T:Num> SDivRHS<T,TMat2x4<T>> for TMat2x4<T> {
-    fn rev_div(&self, lhs: &S<T>) -> TMat2x4<T> {
-        let &S(ref f) = lhs;
-        self.map(|x|*f / *x)
-    }
-}
-
-impl<T:Num> TMat2x4MulRHS<T,TMat2x4<T>> for S<T> {
-    fn rev_mul(&self, lhs: &TMat2x4<T>) -> TMat2x4<T> {
-        let &S(ref f) = self;
-        lhs.map(|x|*x * *f)
-    }
-}
-
-impl<T:Num> TMat2x4DivRHS<T,TMat2x4<T>> for S<T> {
-    fn rev_div(&self, lhs: &TMat2x4<T>) -> TMat2x4<T> {
-        let &S(ref f) = self;
-        lhs.map(|x|*x / *f)
     }
 }
 
