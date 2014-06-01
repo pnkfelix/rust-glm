@@ -51,6 +51,7 @@ mod src {
     // listed here.
 
     pub mod typedefs;
+    pub mod operators;
     pub mod matrix;
     pub mod vector;
     pub mod scalar;
