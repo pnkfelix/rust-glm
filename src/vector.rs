@@ -1,36 +1,6 @@
 use super::typedefs::{vec1,vec2,vec3,vec4};
 use super::typedefs::{ivec1,ivec2,ivec3,ivec4};
-
-/// Scalar value of type T.  (New type wrapper to ease operator overloading.)
-pub struct S<T>(pub T);
-
-pub trait SAddRHS<T,Result> { fn rev_add(&self, lhs: &S<T>) -> Result; }
-pub trait SSubRHS<T,Result> { fn rev_sub(&self, lhs: &S<T>) -> Result; }
-pub trait SMulRHS<T,Result> { fn rev_mul(&self, lhs: &S<T>) -> Result; }
-pub trait SDivRHS<T,Result> { fn rev_div(&self, lhs: &S<T>) -> Result; }
-
-impl<T,Result,RHS:SAddRHS<T,Result>> Add<RHS,Result> for S<T> {
-    fn add(&self, rhs: &RHS) -> Result {
-        rhs.rev_add(self)
-    }
-}
-
-impl<T,Result,RHS:SSubRHS<T,Result>> Sub<RHS,Result> for S<T> {
-    fn sub(&self, rhs: &RHS) -> Result {
-        rhs.rev_sub(self)
-    }
-}
-
-impl<T,Result,RHS:SMulRHS<T,Result>> Mul<RHS,Result> for S<T> {
-    fn mul(&self, rhs: &RHS) -> Result {
-        rhs.rev_mul(self)
-    }
-}
-impl<T,Result,RHS:SDivRHS<T,Result>> Div<RHS,Result> for S<T> {
-    fn div(&self, rhs: &RHS) -> Result {
-        rhs.rev_div(self)
-    }
-}
+use src::scalar::{S,SAddRHS,SSubRHS,SMulRHS,SDivRHS};
 
 pub trait Increment {
     fn postincrement(&mut self) -> Self;
@@ -828,9 +798,10 @@ mod vec1_tests {
 mod vec2_tests {
     #![allow(uppercase_variables)]
     use super::vec2;
-    use super::S;
     use super::{AddAssign,SubAssign,MulAssign,DivAssign};
     use super::{Increment, Decrement};
+
+    use src::scalar::S;
 
     #[test]
     fn test_operators() {
@@ -999,10 +970,10 @@ mod vec3_tests {
     use super::{vec2, vec3, vec4};
     use super::{ivec3};
     use super::dot;
-    use super::S;
     use super::{AddAssign,SubAssign,MulAssign,DivAssign};
     use super::{Swizzle2,Swizzle3,Swizzle4};
     use super::{Increment,Decrement};
+    use src::scalar::S;
 
     #[test]
     fn test_ctor() {
@@ -1191,10 +1162,11 @@ mod vec4_tests {
 
     use super::{vec2,vec3,vec4};
     use super::ivec4;
-    use super::S;
     use super::{AddAssign,SubAssign,MulAssign,DivAssign};
     use super::{Increment,Decrement};
     use super::{Swizzle2,Swizzle3,Swizzle4};
+
+    use src::scalar::S;
 
     use test::Bencher;
 

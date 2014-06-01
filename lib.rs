@@ -53,6 +53,7 @@ mod src {
     pub mod typedefs;
     pub mod matrix;
     pub mod vector;
+    pub mod scalar;
 }
 
 /// This is to work around bugs in our reachability analysis that can
