@@ -20,7 +20,9 @@ pub use src::typedefs::{mat3x2,mat3x3,mat3x4};
 pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
 
 pub use src::vector::vec2;
-pub use src::matrix::{mat2x2,mat2};
+pub use src::matrix::{mat2,mat2x2,mat2x3,mat2x4};
+pub use src::matrix::{mat3,mat3x2,mat3x3,mat3x4};
+pub use src::matrix::{mat4,mat4x2,mat4x3,mat4x4};
 pub use src::matrix::inverse;
 
 macro_rules! double_dispatch_T {
