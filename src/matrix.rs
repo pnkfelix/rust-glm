@@ -6,17 +6,36 @@ pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
 use src::vector::{TVec2,TVec2MulRHS};
 use src::vector::{TVec3,TVec3MulRHS};
 use src::vector::{TVec4,TVec4MulRHS};
+use src::vector::Summable;
 use src::scalar::{S,SMulRHS,SDivRHS};
 use std::fmt;
 
-trait Columns<ColVec> {
+trait Columns<'a,ColRefVec> {
     fn num_cols(&self) -> uint;
+    fn col_ref(&'a self, i: uint) -> ColRefVec;
+}
+
+trait ColumnsData<'a,ColVec,ColRefVec> : Columns<'a,ColRefVec> {
     fn col(&self, i: uint) -> ColVec;
 }
 
-trait Rows<RowVec> {
+trait Rows<'a,RowRefVec> {
     fn num_rows(&self) -> uint;
+    fn row_ref(&'a self, j: uint) -> RowRefVec;
+}
+
+trait RowsData<'a,RowVec,RowRefVec> : Rows<'a,RowRefVec> {
     fn row(&self, j: uint) -> RowVec;
+}
+
+
+trait Matrix<T> {
+    fn cr<'a>(&'a self, c: uint, r: uint) -> &'a T;
+    fn rc<'a>(&'a self, r: uint, c: uint) -> &'a T { self.cr(c,r) }
+    fn cr_mut<'a>(&'a mut self, c: uint, r: uint) -> &'a mut T;
+    fn rc_mut<'a>(&'a mut self, r: uint, c: uint) -> &'a mut T {
+        self.cr_mut(c,r)
+    }
 }
 
 trait Invertible {
@@ -69,6 +88,30 @@ pub struct TMat4x3<T> {
     elems: [[T, ..3], ..4]
 }
 
+macro_rules! impl_Matrix_for {
+    ($TMat:ident) =>
+    {
+        impl<T> Matrix<T> for $TMat<T> {
+            fn cr<'a>(&'a self, c: uint, r: uint) -> &'a T {
+                &self.elems[c][r]
+            }
+            fn cr_mut<'a>(&'a mut self, c: uint, r: uint) -> &'a mut T {
+                &mut self.elems[c][r]
+            }
+        }
+    };
+}
+
+impl_Matrix_for!(TMat2)
+impl_Matrix_for!(TMat2x3)
+impl_Matrix_for!(TMat2x4)
+impl_Matrix_for!(TMat3x2)
+impl_Matrix_for!(TMat3)
+impl_Matrix_for!(TMat3x4)
+impl_Matrix_for!(TMat4x2)
+impl_Matrix_for!(TMat4x3)
+impl_Matrix_for!(TMat4)
+
 macro_rules! tvec_of_len {
     ($T:ident, 2) => { TVec2<$T> };
     ($T:ident, 3) => { TVec3<$T> };
@@ -78,8 +121,16 @@ macro_rules! tvec_of_len {
 macro_rules! impl_Columns_for {
     ( $TMat:ident $ncols:expr 2 ) =>
     {
-        impl<T:Clone> Columns<TVec2<T>> for $TMat<T> {
+        impl<'a,T> Columns<'a,TVec2<&'a T>> for $TMat<T> {
             fn num_cols(&self) -> uint { $ncols }
+            fn col_ref(&'a self, i: uint) -> TVec2<&'a T> {
+                assert!(i < $ncols);
+                TVec2 { x: &self.elems[i][0],
+                        y: &self.elems[i][1],
+                }
+            }
+        }
+        impl<'a,T:Clone> ColumnsData<'a, TVec2<T>,TVec2<&'a T>> for $TMat<T> {
             fn col(&self, i: uint) -> TVec2<T> {
                 assert!(i < $ncols);
                 TVec2 { x: self.elems[i][0].clone(),
@@ -90,8 +141,17 @@ macro_rules! impl_Columns_for {
     };
     ( $TMat:ident $ncols:expr 3 ) =>
     {
-        impl<T:Clone> Columns<TVec3<T>> for $TMat<T> {
+        impl<'a,T> Columns<'a,TVec3<&'a T>> for $TMat<T> {
             fn num_cols(&self) -> uint { $ncols }
+            fn col_ref(&'a self, i: uint) -> TVec3<&'a T> {
+                assert!(i < $ncols);
+                TVec3 { x: &self.elems[i][0],
+                        y: &self.elems[i][1],
+                        z: &self.elems[i][2],
+                }
+            }
+        }
+        impl<'a,T:Clone> ColumnsData<'a,TVec3<T>,TVec3<&'a T>> for $TMat<T> {
             fn col(&self, i: uint) -> TVec3<T> {
                 assert!(i < $ncols);
                 TVec3 { x: self.elems[i][0].clone(),
@@ -103,8 +163,18 @@ macro_rules! impl_Columns_for {
     };
     ( $TMat:ident $ncols:expr 4 ) =>
     {
-        impl<T:Clone> Columns<TVec4<T>> for $TMat<T> {
+        impl<'a,T> Columns<'a,TVec4<&'a T>> for $TMat<T> {
             fn num_cols(&self) -> uint { $ncols }
+            fn col_ref(&'a self, i: uint) -> TVec4<&'a T> {
+                assert!(i < $ncols);
+                TVec4 { x: &self.elems[i][0],
+                        y: &self.elems[i][1],
+                        z: &self.elems[i][2],
+                        w: &self.elems[i][3],
+                }
+            }
+        }
+        impl<'a,T:Clone> ColumnsData<'a,TVec4<T>,TVec4<&'a T>> for $TMat<T> {
             fn col(&self, i: uint) -> TVec4<T> {
                 assert!(i < $ncols);
                 TVec4 { x: self.elems[i][0].clone(),
@@ -120,8 +190,16 @@ macro_rules! impl_Columns_for {
 macro_rules! impl_Rows_for {
     ( $TMat:ident 2 $nrows:expr ) =>
     {
-        impl<T:Clone> Rows<TVec2<T>> for $TMat<T> {
+        impl<'a,T> Rows<'a,TVec2<&'a T>> for $TMat<T> {
             fn num_rows(&self) -> uint { $nrows }
+            fn row_ref(&'a self, j: uint) -> TVec2<&'a T> {
+                assert!(j < $nrows);
+                TVec2 { x: &self.elems[0][j],
+                        y: &self.elems[1][j],
+                }
+            }
+        }
+        impl<'a,T:Clone> RowsData<'a,TVec2<T>,TVec2<&'a T>> for $TMat<T> {
             fn row(&self, j: uint) -> TVec2<T> {
                 assert!(j < $nrows);
                 TVec2 { x: self.elems[0][j].clone(),
@@ -132,8 +210,17 @@ macro_rules! impl_Rows_for {
     };
     ( $TMat:ident 3 $nrows:expr ) =>
     {
-        impl<T:Clone> Rows<TVec3<T>> for $TMat<T> {
+        impl<'a,T> Rows<'a,TVec3<&'a T>> for $TMat<T> {
             fn num_rows(&self) -> uint { $nrows }
+            fn row_ref(&'a self, j: uint) -> TVec3<&'a T> {
+                assert!(j < $nrows);
+                TVec3 { x: &self.elems[0][j],
+                        y: &self.elems[1][j],
+                        z: &self.elems[2][j],
+                }
+            }
+        }
+        impl<'a,T:Clone> RowsData<'a,TVec3<T>,TVec3<&'a T>> for $TMat<T> {
             fn row(&self, j: uint) -> TVec3<T> {
                 assert!(j < $nrows);
                 TVec3 { x: self.elems[0][j].clone(),
@@ -145,8 +232,18 @@ macro_rules! impl_Rows_for {
     };
     ( $TMat:ident 4 $nrows:expr ) =>
     {
-        impl<T:Clone> Rows<TVec4<T>> for $TMat<T> {
+        impl<'a,T> Rows<'a,TVec4<&'a T>> for $TMat<T> {
             fn num_rows(&self) -> uint { $nrows }
+            fn row_ref(&'a self, j: uint) -> TVec4<&'a T> {
+                assert!(j < $nrows);
+                TVec4 { x: &self.elems[0][j],
+                        y: &self.elems[1][j],
+                        z: &self.elems[2][j],
+                        w: &self.elems[3][j],
+                }
+            }
+        }
+        impl<'a,T:Clone> RowsData<'a,TVec4<T>,TVec4<&'a T>> for $TMat<T> {
             fn row(&self, j: uint) -> TVec4<T> {
                 assert!(j < $nrows);
                 TVec4 { x: self.elems[0][j].clone(),
@@ -257,6 +354,14 @@ impl<T,U> Mappable<T,U,TMat2x4<U>> for TMat2x4<T> {
     fn map(&self, f: |&T| -> U) -> TMat2x4<U> {
         TMat2x4 { elems: [[f(&self.elems[0][0]), f(&self.elems[0][1]), f(&self.elems[0][2]), f(&self.elems[0][3])],
                           [f(&self.elems[1][0]), f(&self.elems[1][1]), f(&self.elems[1][2]), f(&self.elems[1][3])]] }
+    }
+}
+
+impl<T,U> Mappable<T,U,TMat3x2<U>> for TMat3x2<T> {
+    fn map(&self, f: |&T| -> U) -> TMat3x2<U> {
+        TMat3x2 { elems: [[f(&self.elems[0][0]), f(&self.elems[0][1])],
+                          [f(&self.elems[1][0]), f(&self.elems[1][1])],
+                          [f(&self.elems[2][0]), f(&self.elems[2][1])]] }
     }
 }
 
@@ -462,6 +567,201 @@ macro_rules! impl_Mat2x3Args_for {
 
 }
 
+macro_rules! impl_Mat3x2Args_for {
+    ($a:ident copy) => {
+        impl Mat3x2Args for $a {
+            fn make(self) -> mat3x2 {
+                let x = self;
+                TMat3x2 { elems: [[x as f32,x as f32],
+                                  [x as f32,x as f32],
+                                  [x as f32,x as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,
+     $c:ident,$d:ident,
+     $e:ident,$f:ident) => {
+        impl Mat3x2Args for ($a,$b,
+                             $c,$d,
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let (a,b,c,d,e,f) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for (($a,$b),
+                             $c,$d,
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let ((a,b),c,d,e,f) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for ($a,$b,
+                             ($c,$d),
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let (a,b,(c,d),e,f) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for ($a,$b,
+                             $c,$d,
+                             ($e,$f)) {
+            fn make(self) -> mat3x2 {
+                let (a,b,c,d,(e,f)) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for (($a,$b),
+                             ($c,$d),
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let ((a,b),(c,d),e,f) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for (($a,$b),
+                             $c,$d,
+                             ($e,$f)) {
+            fn make(self) -> mat3x2 {
+                let ((a,b),c,d,(e,f)) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for ($a,$b,
+                             ($c,$d),
+                             ($e,$f)) {
+            fn make(self) -> mat3x2 {
+                let (a,b,(c,d),(e,f)) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+        impl Mat3x2Args for (($a,$b),
+                             ($c,$d),
+                             ($e,$f)) {
+            fn make(self) -> mat3x2 {
+                let ((a,b),(c,d),(e,f)) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+    };
+    ($a:ident 2,
+     $c:ident,$d:ident,
+     $e:ident,$f:ident) => {
+        impl Mat3x2Args for ($a,
+                             $c,$d,
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let (a,  c,d,e,f) = self;
+                TMat3x2 { elems: [[a.x as f32,a.y as f32],
+                                  [c as f32,d as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,
+     $c:ident 2,
+     $e:ident,$f:ident) => {
+        impl Mat3x2Args for ($a,$b,
+                             $c,
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let (a,b,c  ,e,f) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c.x as f32,c.y as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,
+     $c:ident,$d:ident,
+     $e:ident 2) => {
+        impl Mat3x2Args for ($a,$b,
+                             $c,$d,
+                             $e) {
+            fn make(self) -> mat3x2 {
+                let (a,b,c,d,e  ) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c as f32,d as f32],
+                                  [e.x as f32,e.y as f32]] }
+            }
+        }
+    };
+    ($a:ident 2,
+     $c:ident,$d:ident,
+     $e:ident 2) => {
+        impl Mat3x2Args for ($a,
+                             $c,$d,
+                             $e) {
+            fn make(self) -> mat3x2 {
+                let (a  ,c,d,e  ) = self;
+                TMat3x2 { elems: [[a.x as f32,a.y as f32],
+                                  [c as f32,d as f32],
+                                  [e.x as f32,e.y as f32]] }
+            }
+        }
+    };
+    ($a:ident 2,
+     $c:ident 2,
+     $e:ident,$f:ident) => {
+        impl Mat3x2Args for ($a,
+                             $c,
+                             $e,$f) {
+            fn make(self) -> mat3x2 {
+                let (a,  c,  e,f) = self;
+                TMat3x2 { elems: [[a.x as f32,a.y as f32],
+                                  [c.x as f32,c.y as f32],
+                                  [e as f32,f as f32]] }
+            }
+        }
+    };
+    ($a:ident,$b:ident,
+     $c:ident 2,
+     $e:ident 2) => {
+        impl Mat3x2Args for ($a,$b,
+                             $c,
+                             $e) {
+            fn make(self) -> mat3x2 {
+                let (a,b,c  ,e  ) = self;
+                TMat3x2 { elems: [[a as f32,b as f32],
+                                  [c.x as f32,c.y as f32],
+                                  [e.x as f32,e.y as f32]] }
+            }
+        }
+    };
+    ($a:ident 2,
+     $c:ident 2,
+     $e:ident 2) => {
+        impl Mat3x2Args for ($a,
+                             $c,
+                             $e) {
+            fn make(self) -> mat3x2 {
+                let (a  ,c  ,e  ) = self;
+                TMat3x2 { elems: [[a.x as f32,a.y as f32],
+                                  [c.x as f32,c.y as f32],
+                                  [e.x as f32,e.y as f32]] }
+            }
+        }
+    };
+}
+
 
 impl_Mat2x2Args_for!(f32 copy)
 impl_Mat2x2Args_for!(int copy)
@@ -634,6 +934,64 @@ all_choices!(impl_Mat2x4Args_for_choice :
 
 impl_Mat2x4Args_for!(vec4 4,vec4 4)
 
+macro_rules! impl_Mat3x2Args_for_choice {
+    ( $a:ident, $b:ident,
+      $c:ident, $d:ident,
+      $e:ident, $f:ident, $($ignore:ident),*) => {
+        impl_Mat3x2Args_for!($a, $b, $c, $d, $e, $f)
+    }
+}
+
+impl_Mat3x2Args_for!(f32 copy)
+impl_Mat3x2Args_for!(int copy)
+
+all_choices!(impl_Mat3x2Args_for_choice :
+             todo: {  (int | f32) (int | f32)
+                      (int | f32) (int | f32)
+                      (int | f32) (int | f32) }
+             done: { (ignored) } )
+
+
+macro_rules! impl_Mat3x2Args_for_choice_1st_vec2 {
+    ( $c:ident, $d:ident, $e:ident, $f:ident, $($ignore:ident),*) => {
+        impl_Mat3x2Args_for!(vec2 2, $c, $d, $e, $f)
+    }
+}
+macro_rules! impl_Mat3x2Args_for_choice_2nd_vec2 {
+    ( $a:ident, $b:ident, $e:ident, $f:ident, $($ignore:ident),*) => {
+        impl_Mat3x2Args_for!($a, $b, vec2 2, $e, $f)
+    }
+}
+macro_rules! impl_Mat3x2Args_for_choice_3rd_vec2 {
+    ( $a:ident, $b:ident, $c:ident, $d:ident, $($ignore:ident),*) => {
+        impl_Mat3x2Args_for!($a, $b, $c, $d, vec2 2)
+    }
+}
+
+all_choices!(impl_Mat3x2Args_for_choice_1st_vec2 :
+             todo: {  (int | f32) (int | f32) (int | f32) (int | f32) }
+             done: { (ignored) } )
+all_choices!(impl_Mat3x2Args_for_choice_2nd_vec2 :
+             todo: {  (int | f32) (int | f32) (int | f32) (int | f32) }
+             done: { (ignored) } )
+all_choices!(impl_Mat3x2Args_for_choice_3rd_vec2 :
+             todo: {  (int | f32) (int | f32) (int | f32) (int | f32) }
+             done: { (ignored) } )
+
+impl_Mat3x2Args_for!(vec2 2, vec2 2, f32, f32)
+impl_Mat3x2Args_for!(vec2 2, vec2 2, f32, int)
+impl_Mat3x2Args_for!(vec2 2, vec2 2, int, f32)
+impl_Mat3x2Args_for!(vec2 2, vec2 2, int, int)
+impl_Mat3x2Args_for!(f32, f32, vec2 2, vec2 2)
+impl_Mat3x2Args_for!(f32, int, vec2 2, vec2 2)
+impl_Mat3x2Args_for!(int, f32, vec2 2, vec2 2)
+impl_Mat3x2Args_for!(int, int, vec2 2, vec2 2)
+impl_Mat3x2Args_for!(vec2 2, f32, f32, vec2 2)
+impl_Mat3x2Args_for!(vec2 2, f32, int, vec2 2)
+impl_Mat3x2Args_for!(vec2 2, int, f32, vec2 2)
+impl_Mat3x2Args_for!(vec2 2, int, int, vec2 2)
+impl_Mat3x2Args_for!(vec2 2, vec2 2, vec2 2)
+
 double_dispatch_T!{Mul for TMat2   mul via TMat2x2MulRHS rev_mul}
 double_dispatch_T!{Div for TMat2   div via TMat2x2DivRHS rev_div}
 double_dispatch_T!{Mul for TMat2x3 mul via TMat2x3MulRHS rev_mul}
@@ -689,89 +1047,352 @@ macro_rules! impl_Scalar_MulDiv_for {
 impl_Scalar_MulDiv_for!(TMat2 TMat2x2MulRHS TMat2x2DivRHS)
 impl_Scalar_MulDiv_for!(TMat2x3 TMat2x3MulRHS TMat2x3DivRHS)
 impl_Scalar_MulDiv_for!(TMat2x4 TMat2x4MulRHS TMat2x4DivRHS)
+impl_Scalar_MulDiv_for!(TMat3x2 TMat3x2MulRHS TMat3x2DivRHS)
 
-impl<T:Num> TMat2x2MulRHS<T,TMat2<T>> for TMat2<T> {
-    fn rev_mul(&self, lhs: &TMat2<T>) -> TMat2<T> {
-        let l = &lhs.elems;
-        let r = &self.elems;
-        let c00 = l[0][0] * r[0][0] + l[0][1] * r[1][0];
-        let c01 = l[0][0] * r[0][1] + l[0][1] * r[1][1];
-        let c10 = l[1][0] * r[0][0] + l[1][1] * r[1][0];
-        let c11 = l[1][0] * r[0][1] + l[1][1] * r[1][1];
+macro_rules! impl_MulRHS_for {
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 2 2 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat2<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat2<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
 
-        TMat2 { elems: [[c00, c01],
-                        [c10, c11]] }
-    }
-}
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
 
-impl<T:Num> TMat2x3MulRHS<T,TMat2<T>> for TMat3x2<T> {
-    fn rev_mul(&self, lhs: &TMat2x3<T>) -> TMat2<T> {
-        let l = &lhs.elems;
-        let r = &self.elems;
-        let c00 = l[0][0] * r[0][0] + l[0][1] * r[1][0] + l[0][2] * r[2][0];
-        let c01 = l[0][0] * r[0][1] + l[0][1] * r[1][1] + l[0][2] * r[2][1];
-        let c10 = l[1][0] * r[0][0] + l[1][1] * r[1][0] + l[1][2] * r[2][0];
-        let c11 = l[1][0] * r[0][1] + l[1][1] * r[1][1] + l[1][2] * r[2][1];
-
-        TMat2 { elems: [[c00, c01],
-                        [c10, c11]] }
-    }
-}
-
-impl<T:Num> TMat2x3MulRHS<T,TVec3<T>> for TVec2<T> {
-    fn rev_mul(&self, lhs: &TMat2x3<T>) -> TVec3<T> {
-        TVec3{ x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
-               y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y,
-               z: lhs.elems[0][2] * self.x + lhs.elems[1][2] * self.y, }
-    }
-}
-
-impl<T:Num> TMat2x2MulRHS<T,TVec2<T>> for TVec2<T> {
-    fn rev_mul(&self, lhs: &TMat2<T>) -> TVec2<T> {
-        TVec2{ x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
-               y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y, }
-    }
-}
-
-impl<T:Num> TVec2MulRHS<T,TVec2<T>> for TMat2<T> {
-    fn rev_mul(&self, lhs: &TVec2<T>) -> TVec2<T> {
-        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1],
-               y: lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1], }
-    }
-}
-
-impl<T:Num> TVec3MulRHS<T,TVec2<T>> for TMat2x3<T> {
-    fn rev_mul(&self, lhs: &TVec3<T>) -> TVec2<T> {
-        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1] + lhs.z * self.elems[0][2],
-               y: lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1] + lhs.z * self.elems[1][2], }
-    }
-}
-
-impl<T:Num> TVec3MulRHS<T,TVec2<T>> for TMat3x2<T> {
-    fn rev_mul(&self, lhs: &TVec3<T>) -> TVec2<T> {
-        TVec2{ x: lhs.x * self.elems[0][0] + lhs.y * self.elems[1][0] + lhs.z * self.elems[2][0],
-               y: lhs.x * self.elems[0][1] + lhs.y * self.elems[1][1] + lhs.z * self.elems[2][1], }
-    }
-}
-
-impl<T:Num> TMat2x4MulRHS<T,TVec4<T>> for TVec2<T> {
-    fn rev_mul(&self, lhs: &TMat2x4<T>) -> TVec4<T> {
-        TVec4 { x: lhs.elems[0][0] * self.x + lhs.elems[1][0] * self.y,
-                y: lhs.elems[0][1] * self.x + lhs.elems[1][1] * self.y,
-                z: lhs.elems[0][2] * self.x + lhs.elems[1][2] * self.y,
-                w: lhs.elems[0][3] * self.x + lhs.elems[1][3] * self.y, }
-    }
-}
-
-impl<T:Num> TVec4MulRHS<T,TVec2<T>> for TMat2x4<T> {
-    fn rev_mul(&self, lhs: &TVec4<T>) -> TVec2<T> {
-        TVec2 { x: (lhs.x * self.elems[0][0] + lhs.y * self.elems[0][1] +
-                    lhs.z * self.elems[0][2] + lhs.w * self.elems[0][3]),
-                y: (lhs.x * self.elems[1][0] + lhs.y * self.elems[1][1] +
-                    lhs.z * self.elems[1][2] + lhs.w * self.elems[1][3]),
+                TMat2 { elems: [[c00, c01],
+                                [c10, c11]] }
+            }
         }
-    }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 2 3 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat2x3<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat2x3<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+
+                TMat2x3 { elems: [[c00, c01, c02],
+                                  [c10, c11, c12]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 2 4 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat2x4<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat2x4<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+                let c03 = (a.row(3) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+                let c13 = (a.row(3) * b.col(1)).sum();
+
+                TMat2x4 { elems: [[c00, c01, c02, c03],
+                                  [c10, c11, c12, c13]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 3 2 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat3x2<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat3x2<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+
+                TMat3x2 { elems: [[c00, c01],
+                                  [c10, c11],
+                                  [c20, c21]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 3 3 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat3<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat3<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+                let c22 = (a.row(2) * b.col(2)).sum();
+
+                TMat3 { elems: [[c00, c01, c02],
+                                [c10, c11, c12],
+                                [c20, c21, c22]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 3 4 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat3x4<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat3x4<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+                let c03 = (a.row(3) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+                let c13 = (a.row(3) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+                let c22 = (a.row(2) * b.col(2)).sum();
+                let c23 = (a.row(3) * b.col(2)).sum();
+
+                TMat3x4 { elems: [[c00, c01, c02, c03],
+                                  [c10, c11, c12, c13],
+                                  [c20, c21, c22, c23]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 4 2 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat4x2<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat4x2<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+
+                let c30 = (a.row(0) * b.col(3)).sum();
+                let c31 = (a.row(1) * b.col(3)).sum();
+
+                TMat4x2 { elems: [[c00, c01],
+                                  [c10, c11],
+                                  [c20, c21],
+                                  [c30, c31]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 4 3 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat4x3<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat4x3<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+                let c22 = (a.row(2) * b.col(2)).sum();
+
+                let c30 = (a.row(0) * b.col(3)).sum();
+                let c31 = (a.row(1) * b.col(3)).sum();
+                let c32 = (a.row(2) * b.col(3)).sum();
+
+                TMat4x3 { elems: [[c00, c01, c02],
+                                  [c10, c11, c12],
+                                  [c20, c21, c22],
+                                  [c30, c31, c32]] }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TMatRHS:ident 4 4 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TMat4<T>> for $TMatRHS<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TMat4<T> {
+                let a = lhs;
+                let b = self;
+                let c00 = (a.row(0) * b.col(0)).sum();
+                let c01 = (a.row(1) * b.col(0)).sum();
+                let c02 = (a.row(2) * b.col(0)).sum();
+                let c03 = (a.row(3) * b.col(0)).sum();
+
+                let c10 = (a.row(0) * b.col(1)).sum();
+                let c11 = (a.row(1) * b.col(1)).sum();
+                let c12 = (a.row(2) * b.col(1)).sum();
+                let c13 = (a.row(3) * b.col(1)).sum();
+
+                let c20 = (a.row(0) * b.col(2)).sum();
+                let c21 = (a.row(1) * b.col(2)).sum();
+                let c22 = (a.row(2) * b.col(2)).sum();
+                let c23 = (a.row(3) * b.col(2)).sum();
+
+                let c30 = (a.row(0) * b.col(3)).sum();
+                let c31 = (a.row(1) * b.col(3)).sum();
+                let c32 = (a.row(2) * b.col(3)).sum();
+                let c33 = (a.row(3) * b.col(3)).sum();
+
+                TMat4 { elems: [[c00, c01, c02, c03],
+                                [c10, c11, c12, c13],
+                                [c20, c21, c22, c23],
+                                [c30, c31, c32, c33]] }
+            }
+        }
+    };
 }
+
+impl_MulRHS_for!( TMat2   TMat2x2MulRHS TMat2   2 2 )
+impl_MulRHS_for!( TMat2   TMat2x2MulRHS TMat3x2 3 2 )
+impl_MulRHS_for!( TMat2   TMat2x2MulRHS TMat4x2 4 2 )
+
+impl_MulRHS_for!( TMat2x3 TMat2x3MulRHS TMat2   2 3 )
+impl_MulRHS_for!( TMat2x3 TMat2x3MulRHS TMat3x2 3 3 )
+impl_MulRHS_for!( TMat2x3 TMat2x3MulRHS TMat4x2 4 3 )
+
+impl_MulRHS_for!( TMat2x4 TMat2x4MulRHS TMat2   2 4 )
+impl_MulRHS_for!( TMat2x4 TMat2x4MulRHS TMat3x2 3 4 )
+impl_MulRHS_for!( TMat2x4 TMat2x4MulRHS TMat4x2 4 4 )
+
+impl_MulRHS_for!( TMat3x2 TMat3x2MulRHS TMat2x3 2 2 )
+impl_MulRHS_for!( TMat3x2 TMat3x2MulRHS TMat3   3 2 )
+impl_MulRHS_for!( TMat3x2 TMat3x2MulRHS TMat4x3 4 2 )
+
+impl_MulRHS_for!( TMat3   TMat3x3MulRHS TMat2x3 2 3 )
+impl_MulRHS_for!( TMat3   TMat3x3MulRHS TMat3   3 3 )
+impl_MulRHS_for!( TMat3   TMat3x3MulRHS TMat4x3 4 3 )
+
+impl_MulRHS_for!( TMat3x4 TMat3x4MulRHS TMat2x3 2 4 )
+impl_MulRHS_for!( TMat3x4 TMat3x4MulRHS TMat3   3 4 )
+impl_MulRHS_for!( TMat3x4 TMat3x4MulRHS TMat4x3 4 4 )
+
+impl_MulRHS_for!( TMat4x2 TMat4x2MulRHS TMat2x4 2 2 )
+impl_MulRHS_for!( TMat4x2 TMat4x2MulRHS TMat3x4 3 2 )
+impl_MulRHS_for!( TMat4x2 TMat4x2MulRHS TMat4   4 2 )
+
+impl_MulRHS_for!( TMat4x3 TMat4x3MulRHS TMat2x4 2 3 )
+impl_MulRHS_for!( TMat4x3 TMat4x3MulRHS TMat3x4 3 3 )
+impl_MulRHS_for!( TMat4x3 TMat4x3MulRHS TMat4   4 3 )
+
+impl_MulRHS_for!( TMat4   TMat4x4MulRHS TMat2x4 2 4 )
+impl_MulRHS_for!( TMat4   TMat4x4MulRHS TMat3x4 3 4 )
+impl_MulRHS_for!( TMat4   TMat4x4MulRHS TMat4   4 4 )
+
+macro_rules! impl_mat_mul_vec_for {
+    ( $TMatLHS:ident $TMatMul:ident $TVec:ident 2 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TVec2<T>> for $TVec<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TVec2<T> {
+                TVec2{ x: (lhs.row(0) * *self).sum(),
+                       y: (lhs.row(1) * *self).sum(), }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TVec:ident 3 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TVec3<T>> for $TVec<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TVec3<T> {
+                TVec3{ x: (lhs.row(0) * *self).sum(),
+                       y: (lhs.row(1) * *self).sum(),
+                       z: (lhs.row(2) * *self).sum(), }
+            }
+        }
+    };
+    ( $TMatLHS:ident $TMatMul:ident $TVec:ident 4 ) =>
+    {
+        impl<T:Num+Clone> $TMatMul<T,TVec4<T>> for $TVec<T> {
+            fn rev_mul(&self, lhs: &$TMatLHS<T>) -> TVec4<T> {
+                TVec4{ x: (lhs.row(0) * *self).sum(),
+                       y: (lhs.row(1) * *self).sum(),
+                       z: (lhs.row(2) * *self).sum(),
+                       w: (lhs.row(3) * *self).sum(), }
+            }
+        }
+    };
+}
+
+macro_rules! impl_vec_mul_mat_for {
+    ( $TVecLHS:ident $TVecMul:ident $TMat:ident 2 ) =>
+    {
+        impl<T:Num+Clone> $TVecMul<T,TVec2<T>> for $TMat<T> {
+            fn rev_mul(&self, lhs: &$TVecLHS<T>) -> TVec2<T> {
+                TVec2{ x: (lhs * self.col(0)).sum(),
+                       y: (lhs * self.col(1)).sum(), }
+            }
+        }
+    };
+    ( $TVecLHS:ident $TVecMul:ident $TMat:ident 3 ) =>
+    {
+        impl<T:Num+Clone> $TVecMul<T,TVec3<T>> for $TMat<T> {
+            fn rev_mul(&self, lhs: &$TVecLHS<T>) -> TVec3<T> {
+                TVec3{ x: (*lhs * self.col(0)).sum(),
+                       y: (*lhs * self.col(1)).sum(),
+                       z: (*lhs * self.col(2)).sum(), }
+            }
+        }
+    };
+    ( $TVecLHS:ident $TVecMul:ident $TMat:ident 4 ) =>
+    {
+        impl<T:Num+Clone> $TVecMul<T,TVec4<T>> for $TMat<T> {
+            fn rev_mul(&self, lhs: &$TVecLHS<T>) -> TVec4<T> {
+                TVec4{ x: (*lhs * self.col(0)).sum(),
+                       y: (*lhs * self.col(1)).sum(),
+                       z: (*lhs * self.col(2)).sum(),
+                       w: (*lhs * self.col(3)).sum(), }
+            }
+        }
+    };
+}
+
+impl_mat_mul_vec_for!(TMat2   TMat2x2MulRHS TVec2 2)
+impl_mat_mul_vec_for!(TMat2x3 TMat2x3MulRHS TVec2 3)
+impl_mat_mul_vec_for!(TMat2x4 TMat2x4MulRHS TVec2 4)
+
+impl_mat_mul_vec_for!(TMat3x2 TMat3x2MulRHS TVec3 2)
+impl_mat_mul_vec_for!(TMat3   TMat3x3MulRHS TVec3 3)
+impl_mat_mul_vec_for!(TMat3x4 TMat3x4MulRHS TVec3 4)
+
+impl_mat_mul_vec_for!(TMat4x2 TMat4x2MulRHS TVec4 2)
+impl_mat_mul_vec_for!(TMat4x3 TMat4x3MulRHS TVec4 3)
+impl_mat_mul_vec_for!(TMat4   TMat4x4MulRHS TVec4 4)
+
+impl_vec_mul_mat_for!(TVec2 TVec2MulRHS TMat2   2)
+impl_vec_mul_mat_for!(TVec2 TVec2MulRHS TMat3x2 3)
+impl_vec_mul_mat_for!(TVec2 TVec2MulRHS TMat4x2 4)
+
+impl_vec_mul_mat_for!(TVec3 TVec3MulRHS TMat2x3 2)
+impl_vec_mul_mat_for!(TVec3 TVec3MulRHS TMat3   3)
+impl_vec_mul_mat_for!(TVec3 TVec3MulRHS TMat4x3 4)
+
+impl_vec_mul_mat_for!(TVec4 TVec4MulRHS TMat2x4 2)
+impl_vec_mul_mat_for!(TVec4 TVec4MulRHS TMat3x4 3)
+impl_vec_mul_mat_for!(TVec4 TVec4MulRHS TMat4   4)
 
 #[cfg(test)]
 mod mat2x2_tests {
@@ -779,7 +1400,7 @@ mod mat2x2_tests {
 
     use super::{mat2x2,mat2,mat2x3};
     use super::{inverse};
-    use super::{Rows,Columns};
+    use super::{RowsData,ColumnsData};
 
     use src::operators::{EpsilonEq};
     use src::typedefs::{vec2};
@@ -918,5 +1539,32 @@ mod mat2x4_tests {
 
         assert_eq!(m0, m2);
         assert_eq!(m1, m2);
+    }
+}
+
+#[cfg(test)]
+mod mat3x2_tests {
+    use super::{mat3x2};
+
+    use src::scalar::S;
+    use src::typedefs::{vec2,vec3};
+    use src::vector::{vec2,vec3};
+
+    #[test]
+    fn test_operators() {
+        let l = mat3x2(1.0f32);
+        let m = mat3x2(1.0f32);
+        let u = vec3(1.0f32);
+        let v = vec2(1.0f32);
+        let x = S(1.0f32);
+        let a : vec2 = m * u;
+        let b : vec3 = v * m ;
+        let n : mat3x2 = x / m;
+        let o : mat3x2 = m / x;
+        let p : mat3x2 = x * m;
+        let q : mat3x2 = m * x;
+        let _ = (a,b,n,o,p);
+        assert_eq!(m, q);
+        assert_eq!(m, l);
     }
 }

@@ -11,6 +11,10 @@ pub trait DotProduct<T> {
 
 pub fn dot<T,V:DotProduct<T>>(x: V, y: V) -> T { x.dot(&y) }
 
+pub trait Summable<T> {
+    fn sum(&self) -> T;
+}
+
 macro_rules! swizzle_def {
     ( $Name:ident : $SuperTrait:ident
       { $(fn $core_name:ident)* }
@@ -341,6 +345,19 @@ impl_Neg_for!{ TVec2 x, y }
 impl_Neg_for!{ TVec3 x, y, z }
 impl_Neg_for!{ TVec4 x, y, z, w }
 
+impl<T:Num+Clone> Summable<T> for TVec1<T> {
+    fn sum(&self) -> T { self.x.clone() }
+}
+impl<T:Num+Clone> Summable<T> for TVec2<T> {
+    fn sum(&self) -> T { self.x + self.y }
+}
+impl<T:Num+Clone> Summable<T> for TVec3<T> {
+    fn sum(&self) -> T { self.x + self.y + self.z } 
+}
+impl<T:Num+Clone> Summable<T> for TVec4<T> {
+    fn sum(&self) -> T { self.x + self.y + self.z + self.w }
+}
+
 macro_rules! impl_DotProduct_for {
     ($TVec:ident $($x:ident),*) => {
         impl<T:Num> DotProduct<T> for $TVec<T> {
@@ -425,15 +442,15 @@ macro_rules! double_dispatch_usual_impls_2 {
             }
         }
 
-        impl $S_RHS_trait<$ft,TVec2<$ft>> for TVec2<$ft> {
-            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec2<$ft> {
-                let &S(lhs) = lhs;
+        impl<FT:Num> $S_RHS_trait<FT,TVec2<FT>> for TVec2<FT> {
+            fn $s_rev_method(&self, lhs: &S<FT>) -> TVec2<FT> {
+                let &S(ref lhs) = lhs;
                 TVec2 { x: lhs.$op(&self.x), y: lhs.$op(&self.y) }
             }
         }
 
-        impl $V_RHS_trait<$ft,TVec2<$ft>> for TVec2<$ft> {
-            fn $v_rev_method(&self, lhs: &TVec2<$ft>) -> TVec2<$ft> {
+        impl<FT:Num> $V_RHS_trait<FT,TVec2<FT>> for TVec2<FT> {
+            fn $v_rev_method(&self, lhs: &TVec2<FT>) -> TVec2<FT> {
                 TVec2 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y) }
             }
         }
@@ -445,8 +462,8 @@ macro_rules! double_dispatch_usual_impls_2 {
             }
         }
 
-        impl $ASSIGN_RHS_trait<$ft> for TVec2<$ft> {
-            fn $op_into_method(&self, recv: &mut TVec2<$ft>) {
+        impl<FT:Num> $ASSIGN_RHS_trait<FT> for TVec2<FT> {
+            fn $op_into_method(&self, recv: &mut TVec2<FT>) {
                 recv.x = recv.x.$op(&self.x);
                 recv.y = recv.y.$op(&self.y);
             }
@@ -479,15 +496,15 @@ macro_rules! double_dispatch_usual_impls_3 {
             }
         }
 
-        impl $S_RHS_trait<$ft,TVec3<$ft>> for TVec3<$ft> {
-            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec3<$ft> {
-                let &S(lhs) = lhs;
+        impl<FT:Num> $S_RHS_trait<FT,TVec3<FT>> for TVec3<FT> {
+            fn $s_rev_method(&self, lhs: &S<FT>) -> TVec3<FT> {
+                let &S(ref lhs) = lhs;
                 TVec3 { x: lhs.$op(&self.x), y: lhs.$op(&self.y), z: lhs.$op(&self.z) }
             }
         }
 
-        impl $V_RHS_trait<$ft,TVec3<$ft>> for TVec3<$ft> {
-            fn $v_rev_method(&self, lhs: &TVec3<$ft>) -> TVec3<$ft> {
+        impl<FT:Num> $V_RHS_trait<FT,TVec3<FT>> for TVec3<FT> {
+            fn $v_rev_method(&self, lhs: &TVec3<FT>) -> TVec3<FT> {
                 TVec3 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z) }
             }
         }
@@ -535,15 +552,15 @@ macro_rules! double_dispatch_usual_impls_4 {
             }
         }
 
-        impl $S_RHS_trait<$ft,TVec4<$ft>> for TVec4<$ft> {
-            fn $s_rev_method(&self, lhs: &S<$ft>) -> TVec4<$ft> {
-                let &S(lhs) = lhs;
+        impl<FT:Num> $S_RHS_trait<FT,TVec4<FT>> for TVec4<FT> {
+            fn $s_rev_method(&self, lhs: &S<FT>) -> TVec4<FT> {
+                let &S(ref lhs) = lhs;
                 TVec4 { x: lhs.$op(&self.x), y: lhs.$op(&self.y), z: lhs.$op(&self.z), w: lhs.$op(&self.w) }
             }
         }
 
-        impl $V_RHS_trait<$ft,TVec4<$ft>> for TVec4<$ft> {
-            fn $v_rev_method(&self, lhs: &TVec4<$ft>) -> TVec4<$ft> {
+        impl<FT:Num> $V_RHS_trait<FT,TVec4<FT>> for TVec4<FT> {
+            fn $v_rev_method(&self, lhs: &TVec4<FT>) -> TVec4<FT> {
                 TVec4 { x: lhs.x.$op(&self.x), y: lhs.y.$op(&self.y), z: lhs.z.$op(&self.z), w: lhs.w.$op(&self.w) }
             }
         }
@@ -557,8 +574,8 @@ macro_rules! double_dispatch_usual_impls_4 {
             }
         }
 
-        impl $ASSIGN_RHS_trait<$ft> for TVec4<$ft> {
-            fn $op_into_method(&self, recv: &mut TVec4<$ft>) {
+        impl<FT:Num> $ASSIGN_RHS_trait<FT> for TVec4<FT> {
+            fn $op_into_method(&self, recv: &mut TVec4<FT>) {
                 recv.x = recv.x.$op(&self.x);
                 recv.y = recv.y.$op(&self.y);
                 recv.z = recv.z.$op(&self.z);
