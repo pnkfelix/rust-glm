@@ -1,3 +1,12 @@
+// Copyright 2014 Felix S. Klock II. See the COPYRIGHT
+// file at the top-level directory of this distribution.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 pub use src::typedefs::{vec2,vec3,vec4};
 pub use src::typedefs::{mat2x2,mat2x3,mat2x4};
 pub use src::typedefs::{mat3x2,mat3x3,mat3x4};
