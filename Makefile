@@ -6,7 +6,7 @@ BINDIR := $(OUTDIR)/bin
 LIBDIR := $(OUTDIR)/lib
 SRCDIR := .
 
-LIBFILE:=$(shell $(RUSTC) --crate-file-name $(SRCDIR)/lib.rs)
+LIBFILE:=$(shell $(RUSTC) --print-file-name $(SRCDIR)/lib.rs)
 
 ALL_SRC_RS=$(wildcard $(SRCDIR)/src/*.rs)
 LIB_RS=$(SRCDIR)/lib.rs

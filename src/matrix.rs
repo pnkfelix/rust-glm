@@ -306,7 +306,7 @@ macro_rules! impl_Show_for {
 macro_rules! impl_Eq_for {
     ($TMat:ident $ncols:expr $nrows:expr) =>
     {
-        impl<T:Eq> Eq for $TMat<T> {
+        impl<T:PartialEq> PartialEq for $TMat<T> {
             fn eq(&self, rhs: &$TMat<T>) -> bool {
                 for u in range(0u, $ncols) {
                     if self.elems[u] != rhs.elems[u] {
@@ -1409,14 +1409,14 @@ mod mat2x2_tests {
 
     #[test]
     fn basics() {
-        let m123_456 = mat2x3(((1,2,3),
-                               (4,5,6)));
-        assert_eq!(m123_456.row(0), vec2((1,4)));
-        assert_eq!(m123_456.row(1), vec2((2,5)));
-        assert_eq!(m123_456.row(2), vec2((3,6)));
+        let m123_456 = mat2x3(((1i,2i,3i),
+                               (4i,5i,6i)));
+        assert_eq!(m123_456.row(0), vec2((1i,4i)));
+        assert_eq!(m123_456.row(1), vec2((2i,5i)));
+        assert_eq!(m123_456.row(2), vec2((3i,6i)));
 
-        assert_eq!(m123_456.col(0), vec3((1,2,3)));
-        assert_eq!(m123_456.col(1), vec3((4,5,6)));
+        assert_eq!(m123_456.col(0), vec3((1i,2i,3i)));
+        assert_eq!(m123_456.col(1), vec3((4i,5i,6i)));
     }
 
     #[test]
@@ -1441,7 +1441,7 @@ mod mat2x2_tests {
 
     #[test]
     fn test_inverse() {
-        let Matrix = mat2((1, 2, 3, 4));
+        let Matrix = mat2((1i, 2i, 3i, 4i));
         let Inverse = inverse(&Matrix);
         let Identity = Matrix * Inverse;
 
@@ -1451,12 +1451,12 @@ mod mat2x2_tests {
 
     #[test]
     fn test_ctr() {
-        let m0 = mat2x2((vec2((0,1)),
-                         vec2((2, 3))));
-        let m1 = mat2x2((0, 1,
-                         2, 3));
-        let m2 = mat2x2(((0, 1),
-                         (2, 3)));
+        let m0 = mat2x2((vec2((0i, 1i)),
+                         vec2((2i, 3i))));
+        let m1 = mat2x2((0i, 1i,
+                         2i, 3i));
+        let m2 = mat2x2(((0i, 1i),
+                         (2i, 3i)));
         assert_eq!(m0, m2);
         assert_eq!(m1, m2);
     }
@@ -1491,12 +1491,12 @@ mod mat2x3_tests {
 
     #[test]
     fn test_ctr() {
-        let m0 = mat2x3((vec3((0, 1, 2)),
-                         vec3((3, 4, 5))));
-        let m1 = mat2x3((0, 1, 2,
-                         3, 4, 5));
-        let m2 = mat2x3(((0, 1, 2),
-                         (3, 4, 5)));
+        let m0 = mat2x3((vec3((0i, 1i, 2i)),
+                         vec3((3i, 4i, 5i))));
+        let m1 = mat2x3((0i, 1i, 2i,
+                         3i, 4i, 5i));
+        let m2 = mat2x3(((0i, 1i, 2i),
+                         (3i, 4i, 5i)));
         assert_eq!(m0, m2);
         assert_eq!(m1, m2);
     }
@@ -1530,12 +1530,12 @@ mod mat2x4_tests {
 
     #[test]
     fn test_ctr() {
-        let m0 = mat2x4((vec4((0, 1, 2, 3)),
-                         vec4((4, 5, 6, 7))));
-        let m1 = mat2x4((0, 1, 2, 3,
-                         4, 5, 6, 7));
-        let m2 = mat2x4(((0, 1, 2, 3),
-                         (4, 5, 6, 7)));
+        let m0 = mat2x4((vec4((0i, 1i, 2i, 3i)),
+                         vec4((4i, 5i, 6i, 7i))));
+        let m1 = mat2x4((0i, 1i, 2i, 3i,
+                         4i, 5i, 6i, 7i));
+        let m2 = mat2x4(((0i, 1i, 2i, 3i),
+                         (4i, 5i, 6i, 7i)));
 
         assert_eq!(m0, m2);
         assert_eq!(m1, m2);

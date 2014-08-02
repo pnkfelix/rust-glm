@@ -1,4 +1,4 @@
-#![crate_id="glm#0.0.1"]
+#![crate_name="glm"]
 #![crate_type = "lib"]
 
 #![desc = "GLM port"]
