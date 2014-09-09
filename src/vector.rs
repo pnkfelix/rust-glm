@@ -756,7 +756,7 @@ impl_EpsilonEq_for!(TVec4 x, y, z, w)
 
 #[cfg(test)]
 mod vec1_tests {
-    #![allow(uppercase_variables)]
+    #![allow(non_snake_case)] // #![allow(uppercase_variables)]
     use super::vec1;
     use super::ivec1;
 
@@ -787,7 +787,7 @@ mod vec1_tests {
 
 #[cfg(test)]
 mod vec2_tests {
-    #![allow(uppercase_variables)]
+    #![allow(non_snake_case)] // #![allow(uppercase_variables)]
     use super::vec2;
 
     use src::operators::{AddAssign,SubAssign,MulAssign,DivAssign};
@@ -957,7 +957,7 @@ mod vec2_tests {
 
 #[cfg(test)]
 mod vec3_tests {
-    #![allow(uppercase_variables)]
+    #![allow(non_snake_case)] // #![allow(uppercase_variables)]
     use super::{vec2, vec3, vec4};
     use super::{ivec3};
     use super::dot;
@@ -1150,7 +1150,7 @@ mod vec3_tests {
 
 #[cfg(test)]
 mod vec4_tests {
-    #![allow(uppercase_variables)]
+    #![allow(non_snake_case)]
 
     use super::{vec2,vec3,vec4};
     use super::ivec4;
@@ -1309,7 +1309,6 @@ mod vec4_tests {
     static Size: uint = 1000;
 
     #[bench]
-    #[allow(non_snake_case_functions)]
     fn bench_perf_AoS(b: &mut Bencher) {
         use std::default::Default;
         use src::typedefs::{vec2,vec3,vec4};
@@ -1330,7 +1329,6 @@ mod vec4_tests {
     }
 
     #[bench]
-    #[allow(non_snake_case_functions)]
     fn bench_perf_SoA(b: &mut Bencher) {
         use std::default::Default;
         use src::typedefs::{vec2,vec3,vec4};

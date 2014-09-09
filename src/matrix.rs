@@ -285,13 +285,12 @@ impl_ColRow_for!(TMat4x3 4 3)
 
 impl<T:Num> Invertible for TMat2<T> {
     fn inverse(&self) -> TMat2<T> {
-        #![allow(uppercase_variables)]
         use std::num::One;
         let m = &self.elems;
         let one : T = One::one();
-        let OneOverDeterminant = one / (m[0][0] * m[1][1] - m[1][0] * m[0][1]);
-        TMat2 { elems: [[m[1][1] * OneOverDeterminant, m[0][1] * OneOverDeterminant],
-                        [m[1][0] * OneOverDeterminant, m[0][0] * OneOverDeterminant]] }
+        let one_over_determinant = one / (m[0][0] * m[1][1] - m[1][0] * m[0][1]);
+        TMat2 { elems: [[m[1][1] * one_over_determinant, m[0][1] * one_over_determinant],
+                        [m[1][0] * one_over_determinant, m[0][0] * one_over_determinant]] }
     }
 }
 
@@ -1405,7 +1404,7 @@ impl_vec_mul_mat_for!(TVec4 TVec4MulRHS TMat4   4)
 
 #[cfg(test)]
 mod mat2x2_tests {
-    #![allow(uppercase_variables)]
+    #![allow(non_snake_case)] // #![allow(uppercase_variables)]
 
     use super::{mat2x2,mat2,mat2x3};
     use super::{inverse};
