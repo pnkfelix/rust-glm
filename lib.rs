@@ -23,11 +23,6 @@ pub use src::typedefs::{bvec1,bvec2,bvec3,bvec4};
 pub use src::typedefs::{ivec1,ivec2,ivec3,ivec4};
 pub use src::typedefs::{uvec1,uvec2,uvec3,uvec4};
 
-pub use src::typedefs::{mat2,mat3,mat4};
-pub use src::typedefs::{mat2x2,mat2x3,mat2x4};
-pub use src::typedefs::{mat3x2,mat3x3,mat3x4};
-pub use src::typedefs::{mat4x2,mat4x3,mat4x4};
-
 pub use src::vector::vec2;
 pub use src::matrix::{mat2,mat2x2,mat2x3,mat2x4};
 pub use src::matrix::{mat3,mat3x2,mat3x3,mat3x4};
